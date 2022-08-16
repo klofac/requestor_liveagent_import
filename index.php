@@ -97,10 +97,19 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
             foreach($tickets as $ticket)
             {
-                //todo: vybrat pouze [channel_type] => E
-                //todo: vybrat pouze status != B a X
                 //todo: nasmerovat do spravne sluzby ServiceName  [departmentid] => wuub36n4
 
+                //vybereme na zpracovani jen emaily
+                if($ticket['channel_type'] != 'E') {                                
+                    continue;
+                }
+
+                //ignorujeme spam a deleted
+                if($ticket['status'] == 'B' || $ticket['status'] == 'X') {          
+                    continue;
+                }
+
+                // schovame si uzivatele, abychom ho pak na konci naimportili do RQ pres API
                 $users[$ticket['owner_contactid']]['email'] = $ticket['owner_email']; 
                 $users[$ticket['owner_contactid']]['name']  = $ticket['owner_name']; 
 
