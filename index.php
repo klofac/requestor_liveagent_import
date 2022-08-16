@@ -1,7 +1,10 @@
 <?php
 require "config.php";
 
-function apicall(string $command) : array 
+/**
+ * API Call LiveAgent 
+ */
+function apicall_LA(string $command) : array 
 {
 
     $output = array();
@@ -29,6 +32,32 @@ function apicall(string $command) : array
     curl_close($cht);
     // fclose($fp);
     return $output;    
+}
+
+/**
+ * Vyhodnoti zda se jedna o interni zpravu
+ */
+function isInternalType($messageType) : string
+{
+    if(isset($messageType)) {
+        switch ($messageType) {
+            case 'I':
+            case 'U':
+            case 'R':
+            case 'Z':
+            case 'T':
+                $output = 'true';
+                break;
+            
+            default:
+                $output = 'false';
+                break;
+        }
+        return $output;
+    }
+    else {
+        return 'false';
+    }
 }
 
 // main program
@@ -91,7 +120,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
             $tickets = array();
 
             // nacteme tickety
-            $tickets = apicall("tickets?_from=0&_to=1");
+            $tickets = apicall_LA("tickets?_from=0&_to=1");
 //print_r($tickets);
 
             foreach($tickets as $ticket)
@@ -166,7 +195,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                     //-- element
                     xmlwriter_start_element($xw, 'Messages');
                         // nacteme messages k ticketu
-                        $messages = apicall("tickets/".$ticket['id']."/messages?includeQuotedMessages=true");
+                        $messages = apicall_LA("tickets/".$ticket['id']."/messages?includeQuotedMessages=true");
 //print_r($messages);
 
                         foreach($messages as $message)
@@ -179,13 +208,13 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                 xmlwriter_end_element($xw); // CreatedUTC
 
                                 //-- element
-                                xmlwriter_start_element($xw, 'MessageIsHtml');
-                                    xmlwriter_text($xw, 'true');
+                                xmlwriter_start_element($xw, 'MessageIsHtml'); 
+                                    xmlwriter_text($xw, 'true');                    //bude vzdy HTML a zdrojove data pripadne z textu prevadime na HTML
                                 xmlwriter_end_element($xw); // MessageIsHtml
 
                                 //-- element
                                 xmlwriter_start_element($xw, 'IsPrivate');
-                                    xmlwriter_text($xw, 'true');
+                                    xmlwriter_text($xw, isInternalType($message['type']));                    //todo: privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
                                 xmlwriter_end_element($xw); // MessageIsHtml
 
                                 //-- element
@@ -199,17 +228,17 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                                 
                                                 //xmlwriter_write_cdata($xw, $messagePart['message']);
                                                 //xmlwriter_text($xw, "<BR/>");
-                                                xmlwriter_text($xw, html_entity_decode($messagePart['message'])."<BR/>");
+                                                xmlwriter_write_cdata($xw, html_entity_decode($messagePart['message']));
                                             } 
                                             else
                                             {
-                                                if($messagePart['format']!='H')
+                                                if($messagePart['format']=='H')
                                                 {
-                                                    xmlwriter_text($xw, $messagePart['message']."<BR/>");
+                                                    xmlwriter_write_cdata($xw, $messagePart['message']."<BR/>");
                                                 }
                                                 else
                                                 {
-                                                    xmlwriter_text($xw, nl2br($messagePart['message'])."<BR/>");
+                                                    xmlwriter_write_cdata($xw, nl2br(htmlentities($messagePart['message']))."<BR/>");
                                                 }
                                             }
                                         }
