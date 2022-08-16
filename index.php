@@ -54,16 +54,52 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
         xmlwriter_end_element($xw); // FormatVersion
 
         //xmlwriter_write_comment($xw, 'this is a comment.');
+        //-- element
+        xmlwriter_start_element($xw, 'Users');
+            //-- element
+            xmlwriter_start_element($xw, 'User');
+                //-- element
+                xmlwriter_start_element($xw, 'UserName');
+                    xmlwriter_text($xw, 'karlos.munzar@seznam.cz');
+                xmlwriter_end_element($xw); // UserName
 
+                //-- element
+                xmlwriter_start_element($xw, 'Password');
+                    xmlwriter_text($xw, '554sds45w!!!swew');
+                xmlwriter_end_element($xw); // Password
+
+                //-- element
+                xmlwriter_start_element($xw, 'Emails');
+                    //-- element
+                    xmlwriter_start_element($xw, 'string');
+                        xmlwriter_text($xw, 'karlos.munzar@seznam.cz');
+                    xmlwriter_end_element($xw); // string
+                xmlwriter_end_element($xw); // Emails
+
+                //-- element
+                xmlwriter_start_element($xw, 'RoleEndUser');
+                    xmlwriter_text($xw, 'true');
+                xmlwriter_end_element($xw); // RoleEndUser
+
+            xmlwriter_end_element($xw); // User
+
+        xmlwriter_end_element($xw); // Users
+
+        //-- element
         xmlwriter_start_element($xw, 'Tickets');
 
             $tickets = array();
 
             // nacteme tickety
             $tickets = apicall("tickets?_from=0&_to=1");
+//print_r($tickets);
 
             foreach($tickets as $ticket)
             {
+                //todo: vybrat pouze [channel_type] => E
+                //todo: vybrat pouze status != B a X
+                //todo: nasmerovat do spravne sluzby ServiceName  [departmentid] => wuub36n4
+
                 //-- element
                 xmlwriter_start_element($xw, 'Ticket');
                     //-- element
@@ -72,12 +108,25 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                     xmlwriter_end_element($xw); // Type
 
                     //-- element
+                    xmlwriter_start_element($xw, 'CreatedUTC');
+                        xmlwriter_text($xw, date_format(DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $ticket['date_created']), 'Y-m-d\TH:i:sP')); 
+                    xmlwriter_end_element($xw); // CreatedUTC
+
+                    //-- element
                     xmlwriter_start_element($xw, 'ClosedUTC');
                         //-- atributes
+                        /*
                         xmlwriter_start_attribute($xw, 'xsi:nil');
                             xmlwriter_text($xw, 'true');
                         xmlwriter_end_attribute($xw);
+                        */
+                        xmlwriter_text($xw, date_format(DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $ticket['date_resolved']), 'Y-m-d\TH:i:sP')); 
                     xmlwriter_end_element($xw); // ClosedUTC
+
+                    //-- element
+                    xmlwriter_start_element($xw, 'ServiceName');
+                        xmlwriter_text($xw, '02 NOC');
+                    xmlwriter_end_element($xw); // ServiceName
 
                     //-- element
                     xmlwriter_start_element($xw, 'Subject');
@@ -85,10 +134,40 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                     xmlwriter_end_element($xw); // Subject
 
                     //-- element
+                    xmlwriter_start_element($xw, 'FirstMessage');
+                        xmlwriter_text($xw, 'Importováno z '.$ticket['code']);
+                    xmlwriter_end_element($xw); // FirstMessage
+
+                    //-- element
+                    xmlwriter_start_element($xw, 'FirstMessageIsHtml');
+                        xmlwriter_text($xw, 'false');
+                    xmlwriter_end_element($xw); // FirstMessageIsHtml
+
+                    //-- element
+                    xmlwriter_start_element($xw, 'ReportedByUserName');
+                        xmlwriter_text($xw, $ticket['owner_email']);
+                    xmlwriter_end_element($xw); // ReportedByUserName
+
+                    //-- element
+                    xmlwriter_start_element($xw, 'OperatorUserName');
+                        xmlwriter_text($xw, 'admin@ipex.cz');
+                    xmlwriter_end_element($xw); // OperatorUserName
+
+                    //-- element
+                    xmlwriter_start_element($xw, 'Source');
+                        xmlwriter_text($xw, 'Email');
+                    xmlwriter_end_element($xw); // Source
+
+                    //-- element
+                    xmlwriter_start_element($xw, 'TicketState');
+                        xmlwriter_text($xw, 'ServiceRequestClosed');
+                    xmlwriter_end_element($xw); // TicketState
+
+                    //-- element
                     xmlwriter_start_element($xw, 'Messages');
                         // nacteme messages k ticketu
                         $messages = apicall("tickets/".$ticket['id']."/messages?includeQuotedMessages=true");
-                        print_r($messages);
+//print_r($messages);
 
                         foreach($messages as $message)
                         {
@@ -96,7 +175,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                             xmlwriter_start_element($xw, 'Message');
                                 //-- element
                                 xmlwriter_start_element($xw, 'CreatedUTC');
-                                    xmlwriter_text($xw, $message['datecreated']);
+                                    xmlwriter_text($xw, date_format(DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $message['datecreated']), 'Y-m-d\TH:i:sP')); 
                                 xmlwriter_end_element($xw); // CreatedUTC
 
                                 //-- element
@@ -105,15 +184,22 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                 xmlwriter_end_element($xw); // MessageIsHtml
 
                                 //-- element
+                                xmlwriter_start_element($xw, 'IsPrivate');
+                                    xmlwriter_text($xw, 'true');
+                                xmlwriter_end_element($xw); // MessageIsHtml
+
+                                //-- element
                                 xmlwriter_start_element($xw, 'Message');
                                     foreach($message['messages'] as $messagePart)
                                     {
-                                        if($messagePart['message'] != "" && ($messagePart['type']=='H' || $messagePart['type']=='M' || $messagePart['type']=='Q'))
+                                        if($messagePart['message'] != "" )  //&& ($messagePart['type']=='H' || $messagePart['type']=='M' || $messagePart['type']=='Q')
                                         {
                                             if($messagePart['type']=='Q')
                                             {
-                                                xmlwriter_write_cdata($xw, $messagePart['message']);
-                                                xmlwriter_text($xw, "<BR/>");
+                                                
+                                                //xmlwriter_write_cdata($xw, $messagePart['message']);
+                                                //xmlwriter_text($xw, "<BR/>");
+                                                xmlwriter_text($xw, html_entity_decode($messagePart['message'])."<BR/>");
                                             } 
                                             else
                                             {
