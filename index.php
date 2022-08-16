@@ -61,6 +61,8 @@ function isInternalType($messageType) : string
 }
 
 // main program
+$users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver se je pokusime naimportovat do RQ aby pri spusteni XML importu uz vzdy byli dostupni
+
 // definice XML
 $xw = xmlwriter_open_memory();
 xmlwriter_set_indent($xw, 1);
@@ -82,37 +84,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
             xmlwriter_text($xw, '2');
         xmlwriter_end_element($xw); // FormatVersion
 
-        //xmlwriter_write_comment($xw, 'this is a comment.');
-        //-- element
-        xmlwriter_start_element($xw, 'Users');
-            //-- element
-            xmlwriter_start_element($xw, 'User');
-                //-- element
-                xmlwriter_start_element($xw, 'UserName');
-                    xmlwriter_text($xw, 'karlos.munzar@seznam.cz');
-                xmlwriter_end_element($xw); // UserName
-
-                //-- element
-                xmlwriter_start_element($xw, 'Password');
-                    xmlwriter_text($xw, '554sds45w!!!swew');
-                xmlwriter_end_element($xw); // Password
-
-                //-- element
-                xmlwriter_start_element($xw, 'Emails');
-                    //-- element
-                    xmlwriter_start_element($xw, 'string');
-                        xmlwriter_text($xw, 'karlos.munzar@seznam.cz');
-                    xmlwriter_end_element($xw); // string
-                xmlwriter_end_element($xw); // Emails
-
-                //-- element
-                xmlwriter_start_element($xw, 'RoleEndUser');
-                    xmlwriter_text($xw, 'true');
-                xmlwriter_end_element($xw); // RoleEndUser
-
-            xmlwriter_end_element($xw); // User
-
-        xmlwriter_end_element($xw); // Users
+        xmlwriter_write_comment($xw, 'Sekce Users zrusena. Uzivatele musi byt navedeni pres API RQ pred spustenim XML importu a tedy budou vzdy existovat.');
 
         //-- element
         xmlwriter_start_element($xw, 'Tickets');
@@ -120,7 +92,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
             $tickets = array();
 
             // nacteme tickety
-            $tickets = apicall_LA("tickets?_from=0&_to=1");
+            $tickets = apicall_LA("tickets?_from=30&_to=31");
 //print_r($tickets);
 
             foreach($tickets as $ticket)
@@ -128,6 +100,9 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                 //todo: vybrat pouze [channel_type] => E
                 //todo: vybrat pouze status != B a X
                 //todo: nasmerovat do spravne sluzby ServiceName  [departmentid] => wuub36n4
+
+                $users[$ticket['owner_contactid']]['email'] = $ticket['owner_email']; 
+                $users[$ticket['owner_contactid']]['name']  = $ticket['owner_name']; 
 
                 //-- element
                 xmlwriter_start_element($xw, 'Ticket');
@@ -276,5 +251,6 @@ xmlwriter_end_document($xw);
 $xml = xmlwriter_output_memory($xw);
 
 print_r($xml);
+//print_r($users);
 
 ?>
