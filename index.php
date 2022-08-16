@@ -84,9 +84,62 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                         xmlwriter_text($xw, $ticket['subject']);
                     xmlwriter_end_element($xw); // Subject
 
-                    // nacteme messages k ticketu
-                    $messages = apicall("tickets/".$ticket['id']."/messages");
-                    print_r($messages);
+                    //-- element
+                    xmlwriter_start_element($xw, 'Messages');
+                        // nacteme messages k ticketu
+                        $messages = apicall("tickets/".$ticket['id']."/messages?includeQuotedMessages=true");
+                        print_r($messages);
+
+                        foreach($messages as $message)
+                        {
+                            //-- element
+                            xmlwriter_start_element($xw, 'Message');
+                                //-- element
+                                xmlwriter_start_element($xw, 'CreatedUTC');
+                                    xmlwriter_text($xw, $message['datecreated']);
+                                xmlwriter_end_element($xw); // CreatedUTC
+
+                                //-- element
+                                xmlwriter_start_element($xw, 'MessageIsHtml');
+                                    xmlwriter_text($xw, 'true');
+                                xmlwriter_end_element($xw); // MessageIsHtml
+
+                                //-- element
+                                xmlwriter_start_element($xw, 'Message');
+                                    foreach($message['messages'] as $messagePart)
+                                    {
+                                        if($messagePart['message'] != "" && ($messagePart['type']=='H' || $messagePart['type']=='M' || $messagePart['type']=='Q'))
+                                        {
+                                            if($messagePart['type']=='Q')
+                                            {
+                                                xmlwriter_write_cdata($xw, $messagePart['message']);
+                                                xmlwriter_text($xw, "<BR/>");
+                                            } 
+                                            else
+                                            {
+                                                if($messagePart['format']!='H')
+                                                {
+                                                    xmlwriter_text($xw, $messagePart['message']."<BR/>");
+                                                }
+                                                else
+                                                {
+                                                    xmlwriter_text($xw, nl2br($messagePart['message'])."<BR/>");
+                                                }
+                                            }
+                                        }
+                                    }                            
+                                xmlwriter_end_element($xw); // Message
+
+                            xmlwriter_end_element($xw); // Message
+
+
+                        }
+
+
+
+
+
+                    xmlwriter_end_element($xw); // Messages
 
 
 
