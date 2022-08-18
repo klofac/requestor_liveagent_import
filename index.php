@@ -73,6 +73,31 @@ function attachmentMetaDecode($source) {
     return $output;
 }
 
+/**
+ * Stahne prilohu do archivu do domluvene struktury
+ */
+function attachmentDownload($foldername,$filename,$downloadUrl) {
+    $cht = curl_init(str_replace("//","https://",stripslashes($downloadUrl)));
+
+    mkdir("./Import/".$foldername, 0777, true);
+    $fp = fopen("./Import/".$foldername."/".$filename, "w");
+    
+    curl_setopt($cht, CURLOPT_FILE, $fp);
+    curl_setopt($cht, CURLOPT_HEADER, 0);
+
+    curl_exec($cht);
+
+    if(curl_error($cht)) {
+        fwrite($fp, curl_error($cht));
+        echo "ERROR: ".curl_error($cht);
+    }
+
+    curl_close($cht);
+    fclose($fp);
+    return $output; 
+
+}
+
 // main program
 $users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver se je pokusime naimportovat do RQ aby pri spusteni XML importu uz vzdy byli dostupni
 
@@ -244,6 +269,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                                 if($messagePart['type']=='F') {
 
                                                     $filemetadata = attachmentMetaDecode($messagePart['message']);
+                                                    attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['download_url']); 
 
                                                     //-- element
                                                     xmlwriter_start_element($xw, 'ImportTicketMessageAttachment');
