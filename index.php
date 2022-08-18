@@ -4,8 +4,7 @@ require "config.php";
 /**
  * API Call LiveAgent 
  */
-function apicall_LA(string $command) : array 
-{
+function apicall_LA(string $command) : array {
 
     $output = array();
 
@@ -37,8 +36,7 @@ function apicall_LA(string $command) : array
 /**
  * Vyhodnoti zda se jedna o interni zpravu
  */
-function isInternalType($messageType) : string
-{
+function isInternalType($messageType) : string {
     if(isset($messageType)) {
         switch ($messageType) {
             case 'I':
@@ -95,8 +93,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
             $tickets = apicall_LA("tickets?_from=30&_to=31");
 //print_r($tickets);
 
-            foreach($tickets as $ticket)
-            {
+            foreach($tickets as $ticket) {
                 //todo: nasmerovat do spravne sluzby ServiceName  [departmentid] => wuub36n4
 
                 //vybereme na zpracovani jen emaily
@@ -182,8 +179,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                         $messages = apicall_LA("tickets/".$ticket['id']."/messages?includeQuotedMessages=true");
 //print_r($messages);
 
-                        foreach($messages as $message)
-                        {
+                        foreach($messages as $message) {
                             //-- element
                             xmlwriter_start_element($xw, 'Message');
                                 //-- element
@@ -203,25 +199,20 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                                 //-- element
                                 xmlwriter_start_element($xw, 'Message');
-                                    foreach($message['messages'] as $messagePart)
-                                    {
-                                        if($messagePart['message'] != "" )  //&& ($messagePart['type']=='H' || $messagePart['type']=='M' || $messagePart['type']=='Q')
-                                        {
-                                            if($messagePart['type']=='Q')
-                                            {
+                                    foreach($message['messages'] as $messagePart) {
+                                        if($messagePart['message'] != "" ) { //&& ($messagePart['type']=='H' || $messagePart['type']=='M' || $messagePart['type']=='Q')
+                                        
+                                            if($messagePart['type']=='Q') {
                                                 
                                                 //xmlwriter_write_cdata($xw, $messagePart['message']);
                                                 //xmlwriter_text($xw, "<BR/>");
                                                 xmlwriter_write_cdata($xw, html_entity_decode($messagePart['message']));
                                             } 
-                                            else
-                                            {
-                                                if($messagePart['format']=='H')
-                                                {
+                                            else {
+                                                if($messagePart['format']=='H') {
                                                     xmlwriter_write_cdata($xw, $messagePart['message']."<BR/>");
                                                 }
-                                                else
-                                                {
+                                                else {
                                                     xmlwriter_write_cdata($xw, nl2br(htmlentities($messagePart['message']))."<BR/>");
                                                 }
                                             }
