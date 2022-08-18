@@ -58,6 +58,21 @@ function isInternalType($messageType) : string {
     }
 }
 
+/**
+ * Prevede definici pole ve stringu na assoc pole
+ */
+function attachmentMetaDecode($source) {
+
+    $sourceArray = json_decode($source);
+    array_shift($sourceArray); // odmazeme prvni radek s hlavickami sloupcu
+
+    foreach($sourceArray as $row) {
+        $output[$row['0']] = $row['1']; // preformatujeme na assoc pole
+    }
+
+    return $output;
+}
+
 // main program
 $users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver se je pokusime naimportovat do RQ aby pri spusteni XML importu uz vzdy byli dostupni
 
@@ -90,7 +105,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
             $tickets = array();
 
             // nacteme tickety
-            $tickets = apicall_LA("tickets?_from=30&_to=31");
+            $tickets = apicall_LA("tickets?_from=50&_to=51"); //50-53 maji prilohy
 //print_r($tickets);
 
             foreach($tickets as $ticket) {
@@ -199,8 +214,10 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                                 //-- element
                                 xmlwriter_start_element($xw, 'Message');
+                                    $hasAttachments = false;
+
                                     foreach($message['messages'] as $messagePart) {
-                                        if($messagePart['message'] != "" ) { //&& ($messagePart['type']=='H' || $messagePart['type']=='M' || $messagePart['type']=='Q')
+                                        if($messagePart['message'] != "" ) { 
                                         
                                             if($messagePart['type']=='Q') {
                                                 
@@ -208,42 +225,64 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                                 //xmlwriter_text($xw, "<BR/>");
                                                 xmlwriter_write_cdata($xw, html_entity_decode($messagePart['message']));
                                             } 
-                                            else {
-                                                if($messagePart['format']=='H') {
+                                            elseif($messagePart['type']=='F') {
+                                                $hasAttachments = true;
+                                            }
+                                            elseif($messagePart['format']=='H') {
                                                     xmlwriter_write_cdata($xw, $messagePart['message']."<BR/>");
-                                                }
-                                                else {
+                                            }
+                                            else {
                                                     xmlwriter_write_cdata($xw, nl2br(htmlentities($messagePart['message']))."<BR/>");
-                                                }
                                             }
                                         }
                                     }                            
+
+                                    if($hasAttachments ) { 
+                                        //-- element
+                                        xmlwriter_start_element($xw, 'Attachments');
+                                            foreach($message['messages'] as $messagePart) {
+                                                if($messagePart['type']=='F') {
+
+                                                    $filemetadata = attachmentMetaDecode($messagePart['message']);
+
+                                                    //-- element
+                                                    xmlwriter_start_element($xw, 'ImportTicketMessageAttachment');
+                                                        //-- element
+                                                        xmlwriter_start_element($xw, 'Path');
+                                                                xmlwriter_write_cdata($xw, "C:\\Import\\".$ticket['id']."\\".$filemetadata['id']); 
+                                                        xmlwriter_end_element($xw); // Path
+                                                        //-- element
+                                                        xmlwriter_start_element($xw, 'FileName');
+                                                                xmlwriter_text($xw, $filemetadata['name']); 
+                                                        xmlwriter_end_element($xw); // FileName
+                                                        //-- element
+                                                        xmlwriter_start_element($xw, 'ContentType');
+                                                                xmlwriter_text($xw, $filemetadata['type']); 
+                                                        xmlwriter_end_element($xw); // ContentType
+                                                        //-- element
+                                                        xmlwriter_start_element($xw, 'ContentLength');
+                                                                xmlwriter_text($xw, $filemetadata['size']); 
+                                                        xmlwriter_end_element($xw); // ContentLength
+
+                                                    xmlwriter_end_element($xw); // ImportTicketMessageAttachment
+                                                }
+                                            }
+
+                                        xmlwriter_end_element($xw); // Attachments
+                                    }                            
+
                                 xmlwriter_end_element($xw); // Message
 
                             xmlwriter_end_element($xw); // Message
-
-
                         }
 
-
-
-
-
                     xmlwriter_end_element($xw); // Messages
-
-
 
                 xmlwriter_end_element($xw); // Ticket
             }
 
-            /*
-                    // CDATA
-                    xmlwriter_start_element($xw, 'testc');
-                        xmlwriter_write_cdata($xw, "This is cdata content");
-                    xmlwriter_end_element($xw); // testc
-            */
-
         xmlwriter_end_element($xw); // Tickets
+
     xmlwriter_end_element($xw); // RequestorImport
 
 xmlwriter_end_document($xw);
