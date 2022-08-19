@@ -101,6 +101,10 @@ function attachmentDownload($foldername,$filename,$downloadUrl) {
 // main program
 $users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver se je pokusime naimportovat do RQ aby pri spusteni XML importu uz vzdy byli dostupni
 
+//50-53 maji prilohy
+$ticket_from    = (isset($_GET['from']) ? $_GET['from'] : '0' );
+$ticket_to      = (isset($_GET['to']) ? $_GET['to'] : '1' );
+
 // definice XML
 $xw = xmlwriter_open_memory();
 xmlwriter_set_indent($xw, 1);
@@ -122,7 +126,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
             xmlwriter_text($xw, '2');
         xmlwriter_end_element($xw); // FormatVersion
 
-        xmlwriter_write_comment($xw, 'Sekce Users zrusena. Uzivatele musi byt navedeni pres API RQ pred spustenim XML importu a tedy budou vzdy existovat.');
+        xmlwriter_write_comment($xw, 'Sekce Users zrusena. Uzivatele musi byt navedeni do RQ pred spustenim XML importu. Budou tedy pro import vzdy existovat.');
 
         //-- element
         xmlwriter_start_element($xw, 'Tickets');
@@ -130,7 +134,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
             $tickets = array();
 
             // nacteme tickety
-            $tickets = apicall_LA("tickets?_from=50&_to=51"); //50-53 maji prilohy
+            $tickets = apicall_LA("tickets?_from=".$ticket_from."&_to=".$ticket_to); 
 //print_r($tickets);
 
             foreach($tickets as $ticket) {
@@ -315,7 +319,12 @@ xmlwriter_end_document($xw);
 
 $xml = xmlwriter_output_memory($xw);
 
-print_r($xml);
+//print_r($xml);
 //print_r($users);
+
+// ulozime xml do souboru
+$fp = fopen("export_from".$ticket_from."_to".$ticket_to.".xml", "w");
+fwrite($fp, $xml);
+fclose($fp);
 
 ?>
