@@ -266,42 +266,42 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                         }
                                     }                            
 
-                                    if($hasAttachments ) { 
-                                        //-- element
-                                        xmlwriter_start_element($xw, 'Attachments');
-                                            foreach($message['messages'] as $messagePart) {
-                                                if($messagePart['type']=='F') {
-
-                                                    $filemetadata = attachmentMetaDecode($messagePart['message']);
-                                                    attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['download_url']); 
-
-                                                    //-- element
-                                                    xmlwriter_start_element($xw, 'ImportTicketMessageAttachment');
-                                                        //-- element
-                                                        xmlwriter_start_element($xw, 'Path');
-                                                                xmlwriter_write_cdata($xw, "C:\\Import\\".$ticket['id']."\\".$filemetadata['id']); 
-                                                        xmlwriter_end_element($xw); // Path
-                                                        //-- element
-                                                        xmlwriter_start_element($xw, 'FileName');
-                                                                xmlwriter_text($xw, $filemetadata['name']); 
-                                                        xmlwriter_end_element($xw); // FileName
-                                                        //-- element
-                                                        xmlwriter_start_element($xw, 'ContentType');
-                                                                xmlwriter_text($xw, $filemetadata['type']); 
-                                                        xmlwriter_end_element($xw); // ContentType
-                                                        //-- element
-                                                        xmlwriter_start_element($xw, 'ContentLength');
-                                                                xmlwriter_text($xw, $filemetadata['size']); 
-                                                        xmlwriter_end_element($xw); // ContentLength
-
-                                                    xmlwriter_end_element($xw); // ImportTicketMessageAttachment
-                                                }
-                                            }
-
-                                        xmlwriter_end_element($xw); // Attachments
-                                    }                            
-
                                 xmlwriter_end_element($xw); // Message
+
+                                if($hasAttachments ) { 
+                                    //-- element
+                                    xmlwriter_start_element($xw, 'Attachments');
+                                        foreach($message['messages'] as $messagePart) {
+                                            if($messagePart['type']=='F') {
+
+                                                $filemetadata = attachmentMetaDecode($messagePart['message']);
+                                                attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['download_url']); 
+
+                                                //-- element
+                                                xmlwriter_start_element($xw, 'ImportTicketMessageAttachment');
+                                                    //-- element
+                                                    xmlwriter_start_element($xw, 'Path');
+                                                            xmlwriter_write_cdata($xw, "C:\\Import\\".$ticket['id']."\\".$filemetadata['id']); 
+                                                    xmlwriter_end_element($xw); // Path
+                                                    //-- element
+                                                    xmlwriter_start_element($xw, 'FileName');
+                                                            xmlwriter_text($xw, $filemetadata['name']); 
+                                                    xmlwriter_end_element($xw); // FileName
+                                                    //-- element
+                                                    xmlwriter_start_element($xw, 'ContentType');
+                                                            xmlwriter_text($xw, $filemetadata['type']); 
+                                                    xmlwriter_end_element($xw); // ContentType
+                                                    //-- element
+                                                    xmlwriter_start_element($xw, 'ContentLength');
+                                                            xmlwriter_text($xw, $filemetadata['size']); 
+                                                    xmlwriter_end_element($xw); // ContentLength
+
+                                                xmlwriter_end_element($xw); // ImportTicketMessageAttachment
+                                            }
+                                        }
+
+                                    xmlwriter_end_element($xw); // Attachments
+                                }                            
 
                             xmlwriter_end_element($xw); // Message
                         }
