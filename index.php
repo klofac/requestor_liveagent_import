@@ -134,7 +134,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
             $tickets = array();
 
             // nacteme tickety
-            $tickets = apicall_LA("tickets?_from=".$ticket_from."&_to=".$ticket_to); 
+            $tickets = apicall_LA("tickets?_from=".$ticket_from."&_to=".$ticket_to);  //."&_filters={\"code\":\"GPP-JZFFP-995\"}"
 //print_r($tickets);
 
             foreach($tickets as $ticket) {
@@ -149,6 +149,8 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                 if($ticket['status'] == 'B' || $ticket['status'] == 'X') {          
                     continue;
                 }
+
+                $is_closed = isset($ticket['date_resolved']);
 
                 // schovame si uzivatele, abychom ho pak na konci naimportili do RQ pres API
                 $users[$ticket['owner_contactid']]['email'] = $ticket['owner_email']; 
@@ -166,16 +168,21 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                         xmlwriter_text($xw, date_format(DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $ticket['date_created']), 'Y-m-d\TH:i:sP')); 
                     xmlwriter_end_element($xw); // CreatedUTC
 
-                    //-- element
-                    xmlwriter_start_element($xw, 'ClosedUTC');
-                        //-- atributes
-                        /*
-                        xmlwriter_start_attribute($xw, 'xsi:nil');
-                            xmlwriter_text($xw, 'true');
-                        xmlwriter_end_attribute($xw);
-                        */
-                        xmlwriter_text($xw, date_format(DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $ticket['date_resolved']), 'Y-m-d\TH:i:sP')); 
-                    xmlwriter_end_element($xw); // ClosedUTC
+                    if($is_closed) {
+                        //-- element
+                        xmlwriter_start_element($xw, 'ClosedUTC');
+                            xmlwriter_text($xw, date_format(DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $ticket['date_resolved']), 'Y-m-d\TH:i:sP')); 
+                        xmlwriter_end_element($xw); // ClosedUTC
+                    }
+                    else {
+                        //-- element
+                        xmlwriter_start_element($xw, 'ClosedUTC');
+                            //-- atributes
+                            xmlwriter_start_attribute($xw, 'xsi:nil');
+                                xmlwriter_text($xw, 'true');
+                            xmlwriter_end_attribute($xw);
+                        xmlwriter_end_element($xw); // ClosedUTC
+                    }
 
                     //-- element
                     xmlwriter_start_element($xw, 'ServiceName');
@@ -214,7 +221,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                     //-- element
                     xmlwriter_start_element($xw, 'TicketState');
-                        xmlwriter_text($xw, 'ServiceRequestClosed');
+                        xmlwriter_text($xw, ($is_closed ? 'ServiceRequestClosed' : 'ServiceRequestInQueue'));
                     xmlwriter_end_element($xw); // TicketState
 
                     //-- element
