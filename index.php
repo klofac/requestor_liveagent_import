@@ -38,12 +38,17 @@ function apicall_LA(string $command) : array {
  */
 function isInternalType($messageType) : string {
     if(isset($messageType)) {
+        //todo: urcit ktere typy maji byt interni: M - OFFLINE_LEGACY C - CHAT P - CALL V - OUTGOING_CALL 1 - INTERNAL_CALL I - INTERNAL U - INTERNAL_OFFLINE Z - INTERNAL_COLLAPSED S - STARTINFO T - TRANSFER R - RESOLVE J - POSTPONE X - DELETE B - SPAM G - TAG F - FACEBOOK W - TWITTER Y - RETWEET A - KNOWLEDGEBASE_START K - KNOWLEDGEBASE O - FORWARD Q - FORWARD_REPLY L - SPLITTED 2 - MERGED 3 - INCOMING_EMAIL 4 - OUTGOING_EMAIL 5 - OFFLINE
         switch ($messageType) {
             case 'I':
             case 'U':
             case 'R':
             case 'Z':
             case 'T':
+            case 'G':
+            case 'J':
+            case 'X':
+            case 'B':
                 $output = 'true';
                 break;
             
@@ -143,6 +148,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                     continue;
                 }
 
+                //todo urcit ktere statusy se maji zpracovat: I - init N - new T - chatting P - calling R - resolved X - deleted B - spam A - answered C - open W - postponed
                 //ignorujeme spam a deleted
                 if($ticket['status'] == 'B' || $ticket['status'] == 'X') {          
                     continue;
@@ -247,6 +253,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                     xmlwriter_text($xw, isInternalType($message['type']));  //privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
                                 xmlwriter_end_element($xw); // MessageIsHtml
 
+                                //todo: urcit ktere statusy se maji zpracovat: D - DELETED P - PROMOTED V - VISIBLE S - SPLITTED M - MERGED I - INITIALIZING R - CONNECTING C - CALLING
                                 //-- element
                                 xmlwriter_start_element($xw, 'Message');
                                     $hasAttachments = false;
