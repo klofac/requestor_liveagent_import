@@ -138,8 +138,6 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 //print_r($tickets);
 
             foreach($tickets as $ticket) {
-                //todo: nasmerovat do spravne sluzby ServiceName  [departmentid] => wuub36n4
-
                 //vybereme na zpracovani jen emaily
                 if($ticket['channel_type'] != 'E') {                                
                     continue;
@@ -186,6 +184,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                     //-- element
                     xmlwriter_start_element($xw, 'ServiceName');
+                        //todo: nasmerovat do spravne sluzby ServiceName  [departmentid] => wuub36n4
                         xmlwriter_text($xw, '02 NOC');
                     xmlwriter_end_element($xw); // ServiceName
 
@@ -245,7 +244,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                                 //-- element
                                 xmlwriter_start_element($xw, 'IsPrivate');
-                                    xmlwriter_text($xw, isInternalType($message['type']));                    //todo: privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
+                                    xmlwriter_text($xw, isInternalType($message['type']));  //privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
                                 xmlwriter_end_element($xw); // MessageIsHtml
 
                                 //-- element
