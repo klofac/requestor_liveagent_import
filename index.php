@@ -204,7 +204,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                     //-- element
                     xmlwriter_start_element($xw, 'OperatorUserName');
-                        xmlwriter_text($xw, 'admin@ipex.cz');
+                        xmlwriter_text($xw, 'p.steiner@armed.cz');
                     xmlwriter_end_element($xw); // OperatorUserName
 
                     //-- element
