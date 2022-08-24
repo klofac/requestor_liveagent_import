@@ -110,6 +110,9 @@ $users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver
 $ticket_from    = (isset($_GET['from']) ? $_GET['from'] : '0' );
 $ticket_to      = (isset($_GET['to']) ? $_GET['to'] : '1' );
 
+//todo nacist csv s existujicimi kontakty z RQ a kontrolovat zda bude importovatelny ticket
+
+
 // definice XML
 $xw = xmlwriter_open_memory();
 xmlwriter_set_indent($xw, 1);
@@ -155,6 +158,8 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                 }
 
                 $is_closed = isset($ticket['date_resolved']);
+
+                //todo neimportovat otevrene, zapamatovat si index a doimportovat pozdeji
 
                 // schovame si uzivatele, abychom ho pak na konci naimportili do RQ pres API
                 $users[$ticket['owner_contactid']]['email'] = $ticket['owner_email']; 
@@ -340,4 +345,5 @@ $fp = fopen("export_from".$ticket_from."_to".$ticket_to.".xml", "w");
 fwrite($fp, $xml);
 fclose($fp);
 
+echo "Finished";
 ?>
