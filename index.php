@@ -182,6 +182,16 @@ function createCsvMissingUsers($usersImportFileName) {
 /**
  * 
  */
+function writeExcludedTickets($fileName,$row) {
+    
+    $fp = fopen($fileName, "a");
+        fwrite($fp,$row."\n");
+    fclose($fp);
+}
+
+/**
+ * 
+ */
 function convertDepartmentToService($departmentId) {
 
     switch ($departmentId) {
@@ -293,7 +303,11 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                 $is_closed = isset($ticket['date_resolved']);
 
-                //todo neimportovat otevrene, zapamatovat si index a doimportovat pozdeji
+                //neimportovat otevrene, zapamatovat si index a doimportovat pozdeji
+                if(!$is_closed) {
+                    writeExcludedTickets("export_from".$ticket_from."_to".$ticket_to."_excludedTickets.csv",$ticket['id'].",".$ticket['code']);
+                    continue;
+                }
 
                 // schovame si uzivatele, abychom ho pak na konci naimportili do RQ pres API
                 $users[$ticket['owner_contactid']]['email'] = $ticket['owner_email']; 
@@ -396,7 +410,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                     xmlwriter_text($xw, isInternalType($message['type']));  //privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
                                 xmlwriter_end_element($xw); // MessageIsHtml
 
-                                //todo: urcit ktere statusy se maji zpracovat: D - DELETED P - PROMOTED V - VISIBLE S - SPLITTED M - MERGED I - INITIALIZING R - CONNECTING C - CALLING
+                                //ktere statusy se maji zpracovat: D - DELETED P - PROMOTED V - VISIBLE S - SPLITTED M - MERGED I - INITIALIZING R - CONNECTING C - CALLING
                                 //-- element
                                 xmlwriter_start_element($xw, 'Message');
                                     $hasAttachments = false;
