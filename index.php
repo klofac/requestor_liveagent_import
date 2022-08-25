@@ -190,9 +190,32 @@ $userCompareOn  = (isset($_GET['userCompareOn']) ? true : false );
 
 //porovna vsechny uzivatele RQ a LA a pripravi csv pro import chybejicich pokud je v url pozadovano
 if($userCompareOn) {
-   createCsvMissingUsers("importUsers_from".$ticket_from."_to".$ticket_to.".csv");
+   createCsvMissingUsers("exportAllMissingRqUsers.csv");
 }
-    
+  
+// nacteme RQ users, abchom mohli porovnavat zda reporter ticketu je v RQ k dispozici
+$row = 1;
+$RQusers = [];
+$RQusersToImport = [];
+
+if (($fp = fopen("./ExportUsers/ExportUsersRQ.csv", "r")) !== FALSE) {
+    while (($data = fgetcsv($fp, 1000, ";")) !== FALSE) {
+        if($row == 1) {  // nezpracujeme prvni radek s hlavickou csv
+            $row++;
+            continue;
+        }
+
+        $RQusers[$data[10]] = $data[10];
+        //print_r($data) . "<br />\n";
+        //echo $data[10] . "<br />\n";
+        $row++;
+
+        //if($row > 5) break;
+    }
+    fclose($fp);
+}
+
+
 // definice XML
 $xw = xmlwriter_open_memory();
 xmlwriter_set_indent($xw, 1);
@@ -244,6 +267,10 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                 // schovame si uzivatele, abychom ho pak na konci naimportili do RQ pres API
                 $users[$ticket['owner_contactid']]['email'] = $ticket['owner_email']; 
                 $users[$ticket['owner_contactid']]['name']  = $ticket['owner_name']; 
+
+                if(!isset($RQusers[$ticket['owner_email']])) {
+                    $RQusersToImport[$ticket['owner_email']] = $ticket['owner_email'];
+                }
 
                 //-- element
                 xmlwriter_start_element($xw, 'Ticket');
@@ -424,6 +451,26 @@ $xml = xmlwriter_output_memory($xw);
 $fp = fopen("export_from".$ticket_from."_to".$ticket_to.".xml", "w");
 fwrite($fp, $xml);
 fclose($fp);
+
+//zapiseme uzivatele chybejici v RQ a pouzite v prave exportovanem xml
+if(count($RQusersToImport) > 0) {
+    $fpRQimport = fopen("export_from".$ticket_from."_to".$ticket_to."_missingRqUsers.csv", "w");
+
+    sort($RQusersToImport);
+
+    $row = 1;
+    foreach($RQusersToImport as $missingUser) {
+        //print_r($missingUser);
+        if($missingUser !== '') {
+            fwrite($fpRQimport,$missingUser."\n");
+        }
+        $row++;
+        //if($row > 5) break;
+    }
+    
+    fclose($fpRQimport);
+    echo "Chybejici uzivatele vyexportovani do "."export_from".$ticket_from."_to".$ticket_to."_missingRqUsers.csv\n";
+}
 
 echo "Finished";
 ?>
