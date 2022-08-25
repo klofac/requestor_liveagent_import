@@ -219,15 +219,19 @@ function convertDepartmentToService($departmentId) {
     return $result;
 }
 
-
-// main program
+/**
+ * 
+ * MAIN PROGRAM
+ * 
+ */
 $users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver se je pokusime naimportovat do RQ aby pri spusteni XML importu uz vzdy byli dostupni
 
-//50-53 maji prilohy
 $ticket_from    = (isset($_GET['from']) ? $_GET['from'] : '0' );
 $ticket_to      = (isset($_GET['to']) ? $_GET['to'] : '1' );
 $userCompareOn  = (isset($_GET['userCompareOn']) ? true : false );
-
+$searchTicketByCode = (isset($_GET['ticketCode']) ? true : false );
+$searchTicketCode   = $_GET['ticketCode'];
+$exportFilename     = ($searchTicketByCode ? "export_ticket_".$searchTicketCode : "export_from=".$ticket_from."&_to=".$ticket_to);
 
 //porovna vsechny uzivatele RQ a LA a pripravi csv pro import chybejicich pokud je v url pozadovano
 if($userCompareOn) {
@@ -284,9 +288,14 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
         xmlwriter_start_element($xw, 'Tickets');
 
             $tickets = array();
-
+            
             // nacteme tickety
-            $tickets = apicall_LA("tickets?_from=".$ticket_from."&_to=".$ticket_to);  //."&_filters={\"code\":\"GPP-JZFFP-995\"}"
+            if($searchTicketByCode) {
+                $tickets = apicall_LA("tickets?_filters={\"code\":\"".$searchTicketCode."\"}");
+            }
+            else {
+                $tickets = apicall_LA("tickets?_from=".$ticket_from."&_to=".$ticket_to);  
+            }
 //print_r($tickets);
 
             foreach($tickets as $ticket) {
@@ -305,7 +314,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                 //neimportovat otevrene, zapamatovat si index a doimportovat pozdeji
                 if(!$is_closed) {
-                    writeExcludedTickets("export_from".$ticket_from."_to".$ticket_to."_excludedTickets.csv",$ticket['id'].",".$ticket['code']);
+                    writeExcludedTickets($exportFilename."_excludedTickets.csv",$ticket['id'].",".$ticket['code']);
                     continue;
                 }
 
@@ -493,13 +502,13 @@ $xml = xmlwriter_output_memory($xw);
 //print_r($users);
 
 // ulozime xml do souboru
-$fp = fopen("export_from".$ticket_from."_to".$ticket_to.".xml", "w");
+$fp = fopen($exportFilename.".xml", "w");
 fwrite($fp, $xml);
 fclose($fp);
 
 //zapiseme uzivatele chybejici v RQ a pouzite v prave exportovanem xml
 if(count($RQusersToImport) > 0) {
-    $fpRQimport = fopen("export_from".$ticket_from."_to".$ticket_to."_missingRqUsers.csv", "w");
+    $fpRQimport = fopen($exportFilename."_missingRqUsers.csv", "w");
 
     sort($RQusersToImport);
 
@@ -514,7 +523,7 @@ if(count($RQusersToImport) > 0) {
     }
     
     fclose($fpRQimport);
-    echo "Chybejici uzivatele vyexportovani do "."export_from".$ticket_from."_to".$ticket_to."_missingRqUsers.csv <BR/>";
+    echo "Chybejici uzivatele vyexportovani do ".$exportFilename."_missingRqUsers.csv <BR/>";
 }
 
 echo "Finished";
