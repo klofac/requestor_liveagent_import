@@ -38,7 +38,7 @@ function apicall_LA(string $command) : array {
  */
 function isInternalType($messageType) : string {
     if(isset($messageType)) {
-        //todo: urcit ktere typy maji byt interni: M - OFFLINE_LEGACY C - CHAT P - CALL V - OUTGOING_CALL 1 - INTERNAL_CALL I - INTERNAL U - INTERNAL_OFFLINE Z - INTERNAL_COLLAPSED S - STARTINFO T - TRANSFER R - RESOLVE J - POSTPONE X - DELETE B - SPAM G - TAG F - FACEBOOK W - TWITTER Y - RETWEET A - KNOWLEDGEBASE_START K - KNOWLEDGEBASE O - FORWARD Q - FORWARD_REPLY L - SPLITTED 2 - MERGED 3 - INCOMING_EMAIL 4 - OUTGOING_EMAIL 5 - OFFLINE
+        //ktere typy maji byt interni: M - OFFLINE_LEGACY C - CHAT P - CALL V - OUTGOING_CALL 1 - INTERNAL_CALL I - INTERNAL U - INTERNAL_OFFLINE Z - INTERNAL_COLLAPSED S - STARTINFO T - TRANSFER R - RESOLVE J - POSTPONE X - DELETE B - SPAM G - TAG F - FACEBOOK W - TWITTER Y - RETWEET A - KNOWLEDGEBASE_START K - KNOWLEDGEBASE O - FORWARD Q - FORWARD_REPLY L - SPLITTED 2 - MERGED 3 - INCOMING_EMAIL 4 - OUTGOING_EMAIL 5 - OFFLINE
         switch ($messageType) {
             case 'I':
             case 'U':
@@ -179,6 +179,37 @@ function createCsvMissingUsers($usersImportFileName) {
 
 }
 
+/**
+ * 
+ */
+function convertDepartmentToService($departmentId) {
+
+    switch ($departmentId) {
+        case 'ceb5937b':
+            $result = 'Zbraně';
+            break;
+        
+        case 'f417e7e6':
+            $result = 'Nákup';
+            break;
+        
+        case 'tv401zrk':
+            $result = 'Velkoobchod';
+            break;
+    
+        case 'wuub36n4':
+            $result = 'Marketing';
+            break;
+                    
+        default:
+            $result = 'Zakázky';
+            break;
+    }
+
+    return $result;
+}
+
+
 // main program
 $users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver se je pokusime naimportovat do RQ aby pri spusteni XML importu uz vzdy byli dostupni
 
@@ -254,7 +285,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                     continue;
                 }
 
-                //todo urcit ktere statusy se maji zpracovat: I - init N - new T - chatting P - calling R - resolved X - deleted B - spam A - answered C - open W - postponed
+                //statusy: I - init N - new T - chatting P - calling R - resolved X - deleted B - spam A - answered C - open W - postponed
                 //ignorujeme spam a deleted
                 if($ticket['status'] == 'B' || $ticket['status'] == 'X') {          
                     continue;
@@ -302,8 +333,8 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                     //-- element
                     xmlwriter_start_element($xw, 'ServiceName');
-                        //todo: nasmerovat do spravne sluzby ServiceName  [departmentid] => wuub36n4
-                        xmlwriter_text($xw, '02 NOC');
+                        //nasmerovat do spravne sluzby ServiceName podle [departmentid]
+                        xmlwriter_text($xw, convertDepartmentToService((isset($ticket['departmentid']) ? $ticket['departmentid'] : '')));
                     xmlwriter_end_element($xw); // ServiceName
 
                     //-- element
@@ -469,7 +500,7 @@ if(count($RQusersToImport) > 0) {
     }
     
     fclose($fpRQimport);
-    echo "Chybejici uzivatele vyexportovani do "."export_from".$ticket_from."_to".$ticket_to."_missingRqUsers.csv\n";
+    echo "Chybejici uzivatele vyexportovani do "."export_from".$ticket_from."_to".$ticket_to."_missingRqUsers.csv <BR/>";
 }
 
 echo "Finished";
