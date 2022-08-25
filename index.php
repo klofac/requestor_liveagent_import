@@ -103,16 +103,96 @@ function attachmentDownload($foldername,$filename,$downloadUrl) {
 
 }
 
+function createCsvMissingUsers($usersImportFileName) {
+
+    // RQ users
+    $row = 1;
+    $RQusers = [];
+
+    if (($fp = fopen("./ExportUsers/ExportUsersRQ.csv", "r")) !== FALSE) {
+        while (($data = fgetcsv($fp, 1000, ";")) !== FALSE) {
+            if($row == 1) {  // nezpracujeme prvni radek s hlavickou csv
+                $row++;
+                continue;
+            }
+
+            $RQusers[$data[10]] = $data[10];
+            //print_r($data) . "<br />\n";
+            //echo $data[10] . "<br />\n";
+            $row++;
+
+            //if($row > 5) break;
+        }
+        fclose($fp);
+
+
+    }
+    echo "ExportUsersRQ.csv nacteno radku: ".($row-1)." <BR/>";
+    echo "Nalezeno uzivatelu RQ: ".count($RQusers)." <BR/>";
+
+    // LA users
+    $row = 1;
+    $LAusers = [];
+
+    if (($fp = fopen("./ExportUsers/full_customers_LA.csv", "r")) !== FALSE) {
+        while (($data = fgetcsv($fp, 1000, ",")) !== FALSE) {
+            if($row == 1) {  // nezpracujeme prvni radek s hlavickou csv
+                $row++;
+                continue;
+            }
+
+            $LAusers[$data[4]] = $data[4];
+            //print_r($data) . "<br />\n";
+            //echo $data[4] . "<br />\n";
+            $row++;
+
+            //if($row > 5) break;
+        }
+        fclose($fp);
+
+    }
+    echo "Full_customers_LA.csv nacteno radku: ".($row-1)." <BR/>";
+    echo "Nalezeno uzivatelu LA: ".count($LAusers)." <BR/>";
+
+    $rozdil = array_diff($LAusers,$RQusers);
+    $rozdilCount = count($rozdil);
+    echo "Chybejicich uzivatelu uzivatelu LA v RQ: ".$rozdilCount." <BR/>";
+
+    if($rozdilCount > 0) {
+        $fpRQimport = fopen($usersImportFileName, "w");
+
+        sort($rozdil);
+
+        $row = 1;
+        foreach($rozdil as $missingUser) {
+            //print_r($missingUser);
+            if($missingUser !== '') {
+                fwrite($fpRQimport,$missingUser."\n");
+            }
+            $row++;
+            //if($row > 5) break;
+        }
+        
+        fclose($fpRQimport);
+    }
+
+
+}
+
 // main program
 $users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver se je pokusime naimportovat do RQ aby pri spusteni XML importu uz vzdy byli dostupni
 
 //50-53 maji prilohy
 $ticket_from    = (isset($_GET['from']) ? $_GET['from'] : '0' );
 $ticket_to      = (isset($_GET['to']) ? $_GET['to'] : '1' );
+$userCompareOn  = (isset($_GET['userCompareOn']) ? true : false );
 
-//todo nacist csv s existujicimi kontakty z RQ a kontrolovat zda bude importovatelny ticket
 
-
+//porovna vsechny uzivatele RQ a LA a pripravi csv pro import chybejicich pokud je v url pozadovano
+if($userCompareOn) {
+   createCsvMissingUsers("importUsers_from".$ticket_from."_to".$ticket_to.".csv");
+}
+    
 // definice XML
 $xw = xmlwriter_open_memory();
 xmlwriter_set_indent($xw, 1);
