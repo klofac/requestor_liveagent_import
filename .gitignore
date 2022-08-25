@@ -1,2 +1,4 @@
 
 config.php
+ExportUsers/ExportUsersRQ.csv
+ExportUsers/full_customers_LA.csv
