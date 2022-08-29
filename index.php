@@ -398,7 +398,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                     //-- element
                     xmlwriter_start_element($xw, 'Messages');
                         // nacteme messages k ticketu
-                        $messages = apicall_LA("tickets/".$ticket['id']."/messages?includeQuotedMessages=true");
+                        $messages = apicall_LA("tickets/".$ticket['id']."/messages?includeQuotedMessages=true&page=1&_perPage=200");
 //print_r($messages);
 
                         foreach($messages as $message) {
