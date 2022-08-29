@@ -84,7 +84,10 @@ function attachmentMetaDecode($source) {
 function attachmentDownload($foldername,$filename,$downloadUrl) {
     $cht = curl_init(str_replace("//","https://",stripslashes($downloadUrl)));
 
-    mkdir("./Import/".$foldername, 0777, true);
+    if(!is_dir("./Import/".$foldername)) {
+        mkdir("./Import/".$foldername, 0777, true);
+    }
+
     $fp = fopen("./Import/".$foldername."/".$filename, "w");
     
     curl_setopt($cht, CURLOPT_FILE, $fp);
