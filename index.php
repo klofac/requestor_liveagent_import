@@ -304,13 +304,15 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
             foreach($tickets as $ticket) {
                 //vybereme na zpracovani jen emaily
-                if($ticket['channel_type'] != 'E') {                                
+                if($ticket['channel_type'] != 'E') {   
+                    echo "Ignored ".$ticket['code']." (ticket type=".$ticket['channel_type'].") <BR/>\n";                             
                     continue;
                 }
 
                 //statusy: I - init N - new T - chatting P - calling R - resolved X - deleted B - spam A - answered C - open W - postponed
                 //ignorujeme spam a deleted
                 if($ticket['status'] == 'B' || $ticket['status'] == 'X') {          
+                    echo "Ignored ".$ticket['code']." (ticket status=".$ticket['status'].") <BR/>\n";                             
                     continue;
                 }
 
@@ -318,6 +320,7 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
 
                 //neimportovat otevrene, zapamatovat si index a doimportovat pozdeji
                 if(!$is_closed) {
+                    echo "Excluded ".$ticket['code']." (ticket is OPEN) <BR/>\n";                             
                     writeExcludedTickets($exportFilename."_excludedTickets.csv",$ticket['id'].",".$ticket['code']);
                     continue;
                 }
