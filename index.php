@@ -224,6 +224,10 @@ function convertDepartmentToService($departmentId) {
  * MAIN PROGRAM
  * 
  */
+//mereni doby behu programu
+$time_start = microtime(true);
+
+
 $users = array();       //zde posbirame uzivatele pouzite v ticketech a na zaver se je pokusime naimportovat do RQ aby pri spusteni XML importu uz vzdy byli dostupni
 
 $ticket_from    = (isset($_GET['from']) ? $_GET['from'] : '0' );
@@ -526,5 +530,7 @@ if(count($RQusersToImport) > 0) {
     echo "Chybejici uzivatele vyexportovani do ".$exportFilename."_missingRqUsers.csv <BR/>";
 }
 
-echo "Finished";
+$time_end = microtime(true);
+
+echo "Finished in ".round($time_end - $time_start)." sec";
 ?>
