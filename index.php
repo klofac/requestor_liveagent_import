@@ -231,7 +231,7 @@ $ticket_to      = (isset($_GET['to']) ? $_GET['to'] : '1' );
 $userCompareOn  = (isset($_GET['userCompareOn']) ? true : false );
 $searchTicketByCode = (isset($_GET['ticketCode']) ? true : false );
 $searchTicketCode   = $_GET['ticketCode'];
-$exportFilename     = ($searchTicketByCode ? "export_ticket_".$searchTicketCode : "export_from=".$ticket_from."&_to=".$ticket_to);
+$exportFilename     = ($searchTicketByCode ? "export_ticket_".$searchTicketCode : "export_from".$ticket_from."_to".$ticket_to);
 
 //porovna vsechny uzivatele RQ a LA a pripravi csv pro import chybejicich pokud je v url pozadovano
 if($userCompareOn) {
