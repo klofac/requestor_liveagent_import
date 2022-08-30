@@ -238,6 +238,8 @@ $ticket_to      = (isset($_GET['to']) ? $_GET['to'] : '1' );
 $userCompareOn  = (isset($_GET['userCompareOn']) ? true : false );
 $searchTicketByCode = (isset($_GET['ticketCode']) ? true : false );
 $searchTicketCode   = $_GET['ticketCode'];
+$downloadXML        = (isset($_GET['download']) && $_GET['download'] == 'XML' ? true : false );
+$downloadFiles      = (isset($_GET['download']) && $_GET['download'] == 'FILES' ? true : false );
 $exportFilename     = "ImportXML/".($searchTicketByCode ? "export_ticket_".$searchTicketCode : "export_from".$ticket_from."_to".$ticket_to);
 
 //porovna vsechny uzivatele RQ a LA a pripravi csv pro import chybejicich pokud je v url pozadovano
@@ -245,6 +247,37 @@ if($userCompareOn) {
    createCsvMissingUsers("exportAllMissingRqUsers.csv");
 }
   
+// vrati zip XML
+if($downloadXML) {
+    $fname = "ImportXML_from".$ticket_from."_to".$ticket_to.".zip";
+    exec("zip -P ".$GLOBALS['zip_pwd']." -r ".$fname." ImportXML");
+    exec("rm -f ImportXML/*");
+    // send the right headers
+    $fp = fopen($fname, 'rb');
+    header("Content-Type: application/zip");
+    header("Content-Length: " . filesize($fname));
+    header('Content-Disposition: attachment; filename="'.$fname.'"');
+    fpassthru($fp);
+    exec("rm ".$fname);
+    exit;    
+}
+
+// vrati zip Files
+if($downloadFiles) {
+    $fname = "ImportFiles_from".$ticket_from."_to".$ticket_to.".zip";
+    exec("zip -P ".$GLOBALS['zip_pwd']." -r ".$fname." Import");
+    exec("rm -f Import/*");
+    // send the right headers
+    $fp = fopen($fname, 'rb');
+    header("Content-Type: application/zip");
+    header("Content-Length: " . filesize($fname));
+    header('Content-Disposition: attachment; filename="'.$fname.'"');
+    fpassthru($fp);
+    exec("rm ".$fname);
+    exit;    
+}
+
+// Vytvorime importni XML
 // nacteme RQ users, abchom mohli porovnavat zda reporter ticketu je v RQ k dispozici
 $row = 1;
 $RQusers = [];
