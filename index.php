@@ -112,7 +112,7 @@ function createCsvMissingUsers($usersImportFileName) {
     $row = 1;
     $RQusers = [];
 
-    if (($fp = fopen("./ExportUsers/ExportUsersRQ.csv", "r")) !== FALSE) {
+    if (($fp = fopen("./MirrorUsers/ExportUsersRQ.csv", "r")) !== FALSE) {
         while (($data = fgetcsv($fp, 1000, ";")) !== FALSE) {
             if($row == 1) {  // nezpracujeme prvni radek s hlavickou csv
                 $row++;
@@ -137,7 +137,7 @@ function createCsvMissingUsers($usersImportFileName) {
     $row = 1;
     $LAusers = [];
 
-    if (($fp = fopen("./ExportUsers/full_customers_LA.csv", "r")) !== FALSE) {
+    if (($fp = fopen("./MirrorUsers/full_customers_LA.csv", "r")) !== FALSE) {
         while (($data = fgetcsv($fp, 1000, ",")) !== FALSE) {
             if($row == 1) {  // nezpracujeme prvni radek s hlavickou csv
                 $row++;
@@ -238,7 +238,7 @@ $ticket_to      = (isset($_GET['to']) ? $_GET['to'] : '1' );
 $userCompareOn  = (isset($_GET['userCompareOn']) ? true : false );
 $searchTicketByCode = (isset($_GET['ticketCode']) ? true : false );
 $searchTicketCode   = $_GET['ticketCode'];
-$exportFilename     = ($searchTicketByCode ? "export_ticket_".$searchTicketCode : "export_from".$ticket_from."_to".$ticket_to);
+$exportFilename     = "ImportXML/".($searchTicketByCode ? "export_ticket_".$searchTicketCode : "export_from".$ticket_from."_to".$ticket_to);
 
 //porovna vsechny uzivatele RQ a LA a pripravi csv pro import chybejicich pokud je v url pozadovano
 if($userCompareOn) {
@@ -250,7 +250,7 @@ $row = 1;
 $RQusers = [];
 $RQusersToImport = [];
 
-if (($fp = fopen("./ExportUsers/ExportUsersRQ.csv", "r")) !== FALSE) {
+if (($fp = fopen("./MirrorUsers/ExportUsersRQ.csv", "r")) !== FALSE) {
     while (($data = fgetcsv($fp, 1000, ";")) !== FALSE) {
         if($row == 1) {  // nezpracujeme prvni radek s hlavickou csv
             $row++;
@@ -515,6 +515,7 @@ $xml = xmlwriter_output_memory($xw);
 $fp = fopen($exportFilename.".xml", "w");
 fwrite($fp, $xml);
 fclose($fp);
+echo "Tickety vyexportovany do ".$exportFilename.".xml <BR/>\n";
 
 //zapiseme uzivatele chybejici v RQ a pouzite v prave exportovanem xml
 if(count($RQusersToImport) > 0) {
