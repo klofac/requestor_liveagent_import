@@ -266,7 +266,7 @@ if($downloadXML) {
 if($downloadFiles) {
     $fname = "ImportFiles_from".$ticket_from."_to".$ticket_to.".zip";
     exec("zip -P ".$GLOBALS['zip_pwd']." -r ".$fname." Import");
-    exec("rm -f Import/*");
+    exec("rm -f -r Import/*");
     // send the right headers
     $fp = fopen($fname, 'rb');
     header("Content-Type: application/zip");
