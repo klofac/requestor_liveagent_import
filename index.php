@@ -361,6 +361,10 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                     continue;
                 }
 
+                if(!isset($ticket['owner_email']) || $ticket['owner_email'] == "") {
+                   $ticket['owner_email'] = 'p.steiner@armed.cz';
+                }
+
                 // schovame si uzivatele, abychom ho pak na konci naimportili do RQ pres API
                 $users[$ticket['owner_contactid']]['email'] = $ticket['owner_email']; 
                 $users[$ticket['owner_contactid']]['name']  = $ticket['owner_name']; 
