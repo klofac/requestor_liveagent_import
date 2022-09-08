@@ -474,6 +474,10 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                                     foreach($message['messages'] as $messagePart) {
                                         if($messagePart['message'] != "" ) { 
                                         
+                                            // odstranime CDATA v datech, aby se to nervalo s nasim CDATA
+                                            $messagePart['message'] = str_replace('<![CDATA[','',$messagePart['message']);
+                                            $messagePart['message'] = str_replace(']]>','',$messagePart['message']);
+
                                             if($messagePart['type']=='Q') {
                                                 
                                                 //xmlwriter_write_cdata($xw, $messagePart['message']);
