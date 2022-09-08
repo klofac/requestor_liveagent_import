@@ -402,12 +402,6 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                     }
 
                     //-- element
-                    xmlwriter_start_element($xw, 'ServiceName');
-                        //nasmerovat do spravne sluzby ServiceName podle [departmentid]
-                        xmlwriter_text($xw, convertDepartmentToService((isset($ticket['departmentid']) ? $ticket['departmentid'] : '')));
-                    xmlwriter_end_element($xw); // ServiceName
-
-                    //-- element
                     xmlwriter_start_element($xw, 'Subject');
                         xmlwriter_text($xw, $ticket['subject']);
                     xmlwriter_end_element($xw); // Subject
@@ -442,101 +436,119 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                         xmlwriter_text($xw, ($is_closed ? 'ServiceRequestClosed' : 'ServiceRequestInQueue'));
                     xmlwriter_end_element($xw); // TicketState
 
-                    //-- element
-                    xmlwriter_start_element($xw, 'Messages');
-                        // nacteme messages k ticketu
-                        $messages = apicall_LA("tickets/".$ticket['id']."/messages?includeQuotedMessages=true&page=1&_perPage=200");
+                    // nacteme messages k ticketu
+                    $messages = apicall_LA("tickets/".$ticket['id']."/messages?includeQuotedMessages=true&page=1&_perPage=200");
 //print_r($messages);
+                    //kontrola, ze se podarilo nejake message nacist a kdyz ne tak hodime do jine fronty 
+                    if(isset($messages) && $messages['message'] != 'Service Unavailable') {
+                        //-- element
+                        xmlwriter_start_element($xw, 'ServiceName');
+                            //nasmerovat do spravne sluzby ServiceName podle [departmentid]
+                            xmlwriter_text($xw, convertDepartmentToService((isset($ticket['departmentid']) ? $ticket['departmentid'] : '')));
+                        xmlwriter_end_element($xw); // ServiceName
+                    }
+                    else {
+                        //-- element
+                        xmlwriter_start_element($xw, 'ServiceName');
+                            //nasmerovat do sluzby pro vadne tickety
+                            xmlwriter_text($xw, 'Kontrola importu z LA');
+                        xmlwriter_end_element($xw); // ServiceName
+                    }
 
-                        foreach($messages as $message) {
-                            //-- element
-                            xmlwriter_start_element($xw, 'Message');
-                                //-- element
-                                xmlwriter_start_element($xw, 'CreatedUTC');
-                                    xmlwriter_text($xw, date_format(DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $message['datecreated']), 'Y-m-d\TH:i:sP')); 
-                                xmlwriter_end_element($xw); // CreatedUTC
+                    if(isset($messages) && $messages['message'] != 'Service Unavailable') {
+                        //-- element
+                        xmlwriter_start_element($xw, 'Messages');
 
-                                //-- element
-                                xmlwriter_start_element($xw, 'MessageIsHtml'); 
-                                    xmlwriter_text($xw, 'true');                    //bude vzdy HTML a zdrojove data pripadne z textu prevadime na HTML
-                                xmlwriter_end_element($xw); // MessageIsHtml
-
-                                //-- element
-                                xmlwriter_start_element($xw, 'IsPrivate');
-                                    xmlwriter_text($xw, isInternalType($message['type']));  //privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
-                                xmlwriter_end_element($xw); // MessageIsHtml
-
-                                //ktere statusy se maji zpracovat: D - DELETED P - PROMOTED V - VISIBLE S - SPLITTED M - MERGED I - INITIALIZING R - CONNECTING C - CALLING
+                            foreach($messages as $message) {
                                 //-- element
                                 xmlwriter_start_element($xw, 'Message');
-                                    $hasAttachments = false;
+                                    //-- element
+                                    xmlwriter_start_element($xw, 'CreatedUTC');
+                                        xmlwriter_text($xw, date_format(DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $message['datecreated']), 'Y-m-d\TH:i:sP')); 
+                                    xmlwriter_end_element($xw); // CreatedUTC
 
-                                    foreach($message['messages'] as $messagePart) {
-                                        if($messagePart['message'] != "" ) { 
-                                        
-                                            // odstranime CDATA v datech, aby se to nervalo s nasim CDATA
-                                            $messagePart['message'] = str_replace('<![CDATA[','',$messagePart['message']);
-                                            $messagePart['message'] = str_replace(']]>','',$messagePart['message']);
+                                    //-- element
+                                    xmlwriter_start_element($xw, 'MessageIsHtml'); 
+                                        xmlwriter_text($xw, 'true');                    //bude vzdy HTML a zdrojove data pripadne z textu prevadime na HTML
+                                    xmlwriter_end_element($xw); // MessageIsHtml
 
-                                            if($messagePart['type']=='Q') {
-                                                
-                                                //xmlwriter_write_cdata($xw, $messagePart['message']);
-                                                //xmlwriter_text($xw, "<BR/>");
-                                                xmlwriter_write_cdata($xw, html_entity_decode($messagePart['message']));
-                                            } 
-                                            elseif($messagePart['type']=='F') {
-                                                $hasAttachments = true;
+                                    //-- element
+                                    xmlwriter_start_element($xw, 'IsPrivate');
+                                        xmlwriter_text($xw, isInternalType($message['type']));  //privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
+                                    xmlwriter_end_element($xw); // MessageIsHtml
+
+                                    //ktere statusy se maji zpracovat: D - DELETED P - PROMOTED V - VISIBLE S - SPLITTED M - MERGED I - INITIALIZING R - CONNECTING C - CALLING
+                                    //-- element
+                                    xmlwriter_start_element($xw, 'Message');
+                                        $hasAttachments = false;
+
+                                        foreach($message['messages'] as $messagePart) {
+                                            if($messagePart['message'] != "" ) { 
+                                            
+                                                // odstranime CDATA v datech, aby se to nervalo s nasim CDATA
+                                                $messagePart['message'] = str_replace('<![CDATA[','',$messagePart['message']);
+                                                $messagePart['message'] = str_replace(']]>','',$messagePart['message']);
+
+                                                if($messagePart['type']=='Q') {
+                                                    
+                                                    //xmlwriter_write_cdata($xw, $messagePart['message']);
+                                                    //xmlwriter_text($xw, "<BR/>");
+                                                    xmlwriter_write_cdata($xw, html_entity_decode($messagePart['message']));
+                                                } 
+                                                elseif($messagePart['type']=='F') {
+                                                    $hasAttachments = true;
+                                                }
+                                                elseif($messagePart['format']=='H') {
+                                                        xmlwriter_write_cdata($xw, $messagePart['message']."<BR/>");
+                                                }
+                                                else {
+                                                        xmlwriter_write_cdata($xw, nl2br(htmlentities($messagePart['message']))."<BR/>");
+                                                }
                                             }
-                                            elseif($messagePart['format']=='H') {
-                                                    xmlwriter_write_cdata($xw, $messagePart['message']."<BR/>");
+                                        }                            
+
+                                    xmlwriter_end_element($xw); // Message
+
+                                    if($hasAttachments ) { 
+                                        //-- element
+                                        xmlwriter_start_element($xw, 'Attachments');
+                                            foreach($message['messages'] as $messagePart) {
+                                                if($messagePart['type']=='F') {
+
+                                                    $filemetadata = attachmentMetaDecode($messagePart['message']);
+                                                    attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['download_url']); 
+
+                                                    //-- element
+                                                    xmlwriter_start_element($xw, 'ImportTicketMessageAttachment');
+                                                        //-- element
+                                                        xmlwriter_start_element($xw, 'Path');
+                                                                xmlwriter_write_cdata($xw, "C:\\Import\\".$ticket['id']."\\".$filemetadata['id']); 
+                                                        xmlwriter_end_element($xw); // Path
+                                                        //-- element
+                                                        xmlwriter_start_element($xw, 'FileName');
+                                                                xmlwriter_text($xw, $filemetadata['name']); 
+                                                        xmlwriter_end_element($xw); // FileName
+                                                        //-- element
+                                                        xmlwriter_start_element($xw, 'ContentType');
+                                                                xmlwriter_text($xw, $filemetadata['type']); 
+                                                        xmlwriter_end_element($xw); // ContentType
+                                                        //-- element
+                                                        xmlwriter_start_element($xw, 'ContentLength');
+                                                                xmlwriter_text($xw, $filemetadata['size']); 
+                                                        xmlwriter_end_element($xw); // ContentLength
+
+                                                    xmlwriter_end_element($xw); // ImportTicketMessageAttachment
+                                                }
                                             }
-                                            else {
-                                                    xmlwriter_write_cdata($xw, nl2br(htmlentities($messagePart['message']))."<BR/>");
-                                            }
-                                        }
+
+                                        xmlwriter_end_element($xw); // Attachments
                                     }                            
 
                                 xmlwriter_end_element($xw); // Message
+                            }
 
-                                if($hasAttachments ) { 
-                                    //-- element
-                                    xmlwriter_start_element($xw, 'Attachments');
-                                        foreach($message['messages'] as $messagePart) {
-                                            if($messagePart['type']=='F') {
-
-                                                $filemetadata = attachmentMetaDecode($messagePart['message']);
-                                                attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['download_url']); 
-
-                                                //-- element
-                                                xmlwriter_start_element($xw, 'ImportTicketMessageAttachment');
-                                                    //-- element
-                                                    xmlwriter_start_element($xw, 'Path');
-                                                            xmlwriter_write_cdata($xw, "C:\\Import\\".$ticket['id']."\\".$filemetadata['id']); 
-                                                    xmlwriter_end_element($xw); // Path
-                                                    //-- element
-                                                    xmlwriter_start_element($xw, 'FileName');
-                                                            xmlwriter_text($xw, $filemetadata['name']); 
-                                                    xmlwriter_end_element($xw); // FileName
-                                                    //-- element
-                                                    xmlwriter_start_element($xw, 'ContentType');
-                                                            xmlwriter_text($xw, $filemetadata['type']); 
-                                                    xmlwriter_end_element($xw); // ContentType
-                                                    //-- element
-                                                    xmlwriter_start_element($xw, 'ContentLength');
-                                                            xmlwriter_text($xw, $filemetadata['size']); 
-                                                    xmlwriter_end_element($xw); // ContentLength
-
-                                                xmlwriter_end_element($xw); // ImportTicketMessageAttachment
-                                            }
-                                        }
-
-                                    xmlwriter_end_element($xw); // Attachments
-                                }                            
-
-                            xmlwriter_end_element($xw); // Message
-                        }
-
-                    xmlwriter_end_element($xw); // Messages
+                        xmlwriter_end_element($xw); // Messages
+                    }
 
                 xmlwriter_end_element($xw); // Ticket
             }
