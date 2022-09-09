@@ -190,6 +190,12 @@ function writeExcludedTickets($fileName,$row) {
     $fp = fopen($fileName, "a");
         fwrite($fp,$row."\n");
     fclose($fp);
+
+    // zapis do velkeho excluded listu dokud nebude provedeno downloadXML
+    $fp = fopen("ImportXML/excluded_tickets_all.csv", "a");
+        fwrite($fp,$row."\n");
+    fclose($fp);
+
 }
 
 /**
