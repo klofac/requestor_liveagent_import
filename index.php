@@ -620,6 +620,12 @@ if(count($RQusersToImport) > 0) {
     fwrite($fpRQimport,$missingUser);
     fclose($fpRQimport);
     echo "Chybejici uzivatele vyexportovani do ".$exportFilename."_missingRqUsers.csv <BR/>";
+
+    // zapiseme do soupisky za vsechny exporty dokud neprobehne download XML
+    $fpRQimport = fopen("ImportXML/missingRqUsersAll.csv", "a");
+    fwrite($fpRQimport,$missingUser."\n");
+    fclose($fpRQimport);
+
 }
 
 $time_end = microtime(true);
