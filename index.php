@@ -615,17 +615,9 @@ if(count($RQusersToImport) > 0) {
     $fpRQimport = fopen($exportFilename."_missingRqUsers.csv", "w");
 
     sort($RQusersToImport);
+    $missingUser = implode("\n",$RQusersToImport);
 
-    $row = 1;
-    foreach($RQusersToImport as $missingUser) {
-        //print_r($missingUser);
-        if($missingUser !== '') {
-            fwrite($fpRQimport,$missingUser."\n");
-        }
-        $row++;
-        //if($row > 5) break;
-    }
-    
+    fwrite($fpRQimport,$missingUser);
     fclose($fpRQimport);
     echo "Chybejici uzivatele vyexportovani do ".$exportFilename."_missingRqUsers.csv <BR/>";
 }
