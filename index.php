@@ -223,6 +223,24 @@ function convertDepartmentToService($departmentId) {
 }
 
 /**
+ * slouci xmlBody do xmlDoc do finalniho souboru
+ */
+function prepareFinalXmlDoc($fnameFinal) {
+    $xmlDoc     = file_get_contents("ImportXML/export_ticket_all.xmlDoc");
+    $xmlBody    = file_get_contents("ImportXML/export_ticket_all.xmlBody");
+    $xml        = str_replace('<magic>abracadabra</magic>',$xmlBody,$xmlDoc);
+    
+    // ulozime xml do finalniho souboru
+    $fp = fopen($fnameFinal, "w");
+    fwrite($fp, $xml);
+    fclose($fp);
+    
+    // uklidime
+    exec("rm -f ImportXML/export_ticket_all.xmlBody");
+    exec("rm -f ImportXML/export_ticket_all.xmlDoc");
+}
+
+/**
  * 
  * MAIN PROGRAM
  * 
@@ -241,6 +259,7 @@ $searchTicketCode   = $_GET['ticketCode'];
 $downloadXML        = (isset($_GET['download']) && $_GET['download'] == 'XML' ? true : false );
 $downloadFiles      = (isset($_GET['download']) && $_GET['download'] == 'FILES' ? true : false );
 $exportFilename     = "ImportXML/".($searchTicketByCode ? "export_ticket_".$searchTicketCode : "export_from".$ticket_from."_to".$ticket_to);
+$exportAllFileName  = "ImportXML/export_ticket_all";
 
 //porovna vsechny uzivatele RQ a LA a pripravi csv pro import chybejicich pokud je v url pozadovano
 if($userCompareOn) {
@@ -250,6 +269,7 @@ if($userCompareOn) {
 // vrati zip XML
 if($downloadXML) {
     $fname = "ImportXML_from".$ticket_from."_to".$ticket_to.".zip";
+    prepareFinalXmlDoc("ImportXML/ImportXML_from".$ticket_from."_to".$ticket_to.".xml");
     exec("zip -P ".$GLOBALS['zip_pwd']." -r ".$fname." ImportXML");
     exec("rm -f ImportXML/*");
     // send the right headers
@@ -305,27 +325,37 @@ if (($fp = fopen("./MirrorUsers/ExportUsersRQ.csv", "r")) !== FALSE) {
 $xw = xmlwriter_open_memory();
 xmlwriter_set_indent($xw, 1);
 $res = xmlwriter_set_indent_string($xw, ' ');
-xmlwriter_start_document($xw, '1.0', 'UTF-8');
+
+$xwDoc = xmlwriter_open_memory();
+xmlwriter_set_indent($xwDoc, 1);
+$res2 = xmlwriter_set_indent_string($xwDoc, ' ');
+
+ xmlwriter_start_document($xwDoc, '1.0', 'UTF-8');
 
     //-- element
-    xmlwriter_start_element($xw, 'RequestorImport');
+    xmlwriter_start_element($xwDoc, 'RequestorImport');
         //-- atributes
-        xmlwriter_start_attribute($xw, 'xmlns:xsd');
-        xmlwriter_text($xw, 'http://www.w3.org/2001/XMLSchema');
-        xmlwriter_end_attribute($xw);
-        xmlwriter_start_attribute($xw, 'xmlns:xsi');
-        xmlwriter_text($xw, 'http://www.w3.org/2001/XMLSchema-instance');
-        xmlwriter_end_attribute($xw);
+        xmlwriter_start_attribute($xwDoc, 'xmlns:xsd');
+        xmlwriter_text($xwDoc, 'http://www.w3.org/2001/XMLSchema');
+        xmlwriter_end_attribute($xwDoc);
+        xmlwriter_start_attribute($xwDoc, 'xmlns:xsi');
+        xmlwriter_text($xwDoc, 'http://www.w3.org/2001/XMLSchema-instance');
+        xmlwriter_end_attribute($xwDoc);
 
         //-- element
-        xmlwriter_start_element($xw, 'FormatVersion');
-            xmlwriter_text($xw, '2');
-        xmlwriter_end_element($xw); // FormatVersion
+        xmlwriter_start_element($xwDoc, 'FormatVersion');
+            xmlwriter_text($xwDoc, '2');
+        xmlwriter_end_element($xwDoc); // FormatVersion
 
-        xmlwriter_write_comment($xw, 'Sekce Users zrusena. Uzivatele musi byt navedeni do RQ pred spustenim XML importu. Budou tedy pro import vzdy existovat.');
+        xmlwriter_write_comment($xwDoc, 'Sekce Users zrusena. Uzivatele musi byt navedeni do RQ pred spustenim XML importu. Budou tedy pro import vzdy existovat.');
 
         //-- element
-        xmlwriter_start_element($xw, 'Tickets');
+        xmlwriter_start_element($xwDoc, 'Tickets');
+            //-- element
+            xmlwriter_start_element($xwDoc, 'magic');
+                xmlwriter_text($xwDoc, 'abracadabra');
+            xmlwriter_end_element($xwDoc); // magic element bude nahrazen xmlBody
+
 
             $tickets = array();
             
@@ -553,13 +583,15 @@ xmlwriter_start_document($xw, '1.0', 'UTF-8');
                 xmlwriter_end_element($xw); // Ticket
             }
 
-        xmlwriter_end_element($xw); // Tickets
+        xmlwriter_end_element($xwDoc); // Tickets
 
-    xmlwriter_end_element($xw); // RequestorImport
+    xmlwriter_end_element($xwDoc); // RequestorImport
 
-xmlwriter_end_document($xw);
+xmlwriter_end_document($xwDoc);
 
-$xml = xmlwriter_output_memory($xw);
+$xmlBody    = xmlwriter_output_memory($xw);
+$xmlDoc     = xmlwriter_output_memory($xwDoc);
+$xml        = str_replace('<magic>abracadabra</magic>',$xmlBody,$xmlDoc);
 
 //print_r($xml);
 //print_r($users);
@@ -569,6 +601,14 @@ $fp = fopen($exportFilename.".xml", "w");
 fwrite($fp, $xml);
 fclose($fp);
 echo "Tickety vyexportovany do ".$exportFilename.".xml <BR/>\n";
+
+// ulozime body XML do velkeho souboru, hlavicku a paticku dostane az pri downloadu
+$fp = fopen($exportAllFileName.".xmlBody", "a");
+fwrite($fp, $xmlBody);
+fclose($fp);
+$fp = fopen($exportAllFileName.".xmlDoc", "w");
+fwrite($fp, $xmlDoc);
+fclose($fp);
 
 //zapiseme uzivatele chybejici v RQ a pouzite v prave exportovanem xml
 if(count($RQusersToImport) > 0) {
