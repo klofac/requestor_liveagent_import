@@ -276,7 +276,7 @@ if($userCompareOn) {
 if($downloadXML) {
     $fname = "ImportXML_from".$ticket_from."_to".$ticket_to.".zip";
     prepareFinalXmlDoc("ImportXML/ImportXML_from".$ticket_from."_to".$ticket_to.".xml");
-    exec("zip -P ".$GLOBALS['zip_pwd']." -r ".$fname." ImportXML");
+    exec("zip -P ".$GLOBALS['config_zip_pwd']." -r ".$fname." ImportXML");
     exec("rm -f ImportXML/*");
     // send the right headers
     $fp = fopen($fname, 'rb');
@@ -291,7 +291,7 @@ if($downloadXML) {
 // vrati zip Files
 if($downloadFiles) {
     $fname = "ImportFiles_from".$ticket_from."_to".$ticket_to.".zip";
-    exec("zip -P ".$GLOBALS['zip_pwd']." -r ".$fname." Import");
+    exec("zip -P ".$GLOBALS['config_zip_pwd']." -r ".$fname." Import");
     exec("rm -f -r Import/*");
     // send the right headers
     $fp = fopen($fname, 'rb');
@@ -398,7 +398,7 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
                 }
 
                 if(!isset($ticket['owner_email']) || $ticket['owner_email'] == "") {
-                   $ticket['owner_email'] = 'p.steiner@armed.cz';
+                   $ticket['owner_email'] = $GLOBALS['config_def_user'];
                 }
 
                 // schovame si uzivatele, abychom ho pak na konci naimportili do RQ pres API
@@ -459,7 +459,7 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
 
                     //-- element
                     xmlwriter_start_element($xw, 'OperatorUserName');
-                        xmlwriter_text($xw, 'p.steiner@armed.cz');
+                        xmlwriter_text($xw, $GLOBALS['config_def_user']);
                     xmlwriter_end_element($xw); // OperatorUserName
 
                     //-- element
