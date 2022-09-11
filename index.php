@@ -191,8 +191,8 @@ function writeExcludedTickets($fileName,$row) {
         fwrite($fp,$row."\n");
     fclose($fp);
 
-    // zapis do velkeho excluded listu dokud nebude provedeno downloadXML
-    $fp = fopen("ImportXML/excluded_tickets_all.csv", "a");
+    // zapis casti velkeho excluded listu
+    $fp = fopen($exportExcludedFileName."part", "w");
         fwrite($fp,$row."\n");
     fclose($fp);
 
@@ -231,9 +231,9 @@ function convertDepartmentToService($departmentId) {
 /**
  * slouci xmlBody do xmlDoc do finalniho souboru
  */
-function prepareFinalXmlDoc($fnameFinal) {
-    $xmlDoc     = file_get_contents("ImportXML/export_ticket_all.xmlDoc");
-    $xmlBody    = file_get_contents("ImportXML/export_ticket_all.xmlBody");
+function prepareFinalXmlDoc($fnameFinal,$exportAllFileName) {
+    $xmlDoc     = file_get_contents($exportAllFileName.".xmlDoc");
+    $xmlBody    = file_get_contents($exportAllFileName.".xmlBody");
     $xml        = str_replace('<magic>abracadabra</magic>',$xmlBody,$xmlDoc);
     
     // ulozime xml do finalniho souboru
@@ -242,8 +242,47 @@ function prepareFinalXmlDoc($fnameFinal) {
     fclose($fp);
     
     // uklidime
-    exec("rm -f ImportXML/export_ticket_all.xmlBody");
-    exec("rm -f ImportXML/export_ticket_all.xmlDoc");
+    exec("rm -f ".$exportAllFileName.".xmlBody");
+    exec("rm -f ".$exportAllFileName.".xmlDoc");
+}
+
+/**
+ * slouci xmlBody do xmlDoc do finalniho souboru
+ */
+function commitDataToCumulDocs($exportXmlAllFileName,$exportExcludedFileName,$exportMissingRqUsersFileName) {
+
+    // xml import ticketu
+    if(file_exists($exportXmlAllFileName."part")) {
+        $xml     = file_get_contents($exportXmlAllFileName."part");
+        
+        $fp = fopen($exportXmlAllFileName, "a");
+        fwrite($fp, $xml);
+        fclose($fp);
+
+        exec("rm -f ".$exportXmlAllFileName."part");
+    }   
+
+    // import useru
+    if(file_exists($exportMissingRqUsersFileName."part")) {
+        $xml     = file_get_contents($exportMissingRqUsersFileName."part");
+        
+        $fp = fopen($exportMissingRqUsersFileName, "a");
+        fwrite($fp, $xml);
+        fclose($fp);
+
+        exec("rm -f ".$exportMissingRqUsersFileName."part");
+    }   
+
+    // excluded tickety
+    if(file_exists($exportExcludedFileName."part")) {
+        $xml     = file_get_contents($exportExcludedFileName."part");
+        
+        $fp = fopen($exportExcludedFileName, "a");
+        fwrite($fp, $xml);
+        fclose($fp);
+
+        exec("rm -f ".$exportExcludedFileName."part");
+    }   
 }
 
 /**
@@ -264,8 +303,11 @@ $searchTicketByCode = (isset($_GET['ticketCode']) ? true : false );
 $searchTicketCode   = $_GET['ticketCode'];
 $downloadXML        = (isset($_GET['download']) && $_GET['download'] == 'XML' ? true : false );
 $downloadFiles      = (isset($_GET['download']) && $_GET['download'] == 'FILES' ? true : false );
+$commitDataToCumulFiles = (isset($_GET['commitData']) ? true : false );
 $exportFilename     = "ImportXML/".($searchTicketByCode ? "export_ticket_".$searchTicketCode : "export_from".$ticket_from."_to".$ticket_to);
 $exportAllFileName  = "ImportXML/export_ticket_all";
+$exportExcludedFileName = "ImportXML/excluded_tickets_all.csv";
+$exportMissingRqUsersFileName = "ImportXML/missingRqUsersAll.csv";
 
 //porovna vsechny uzivatele RQ a LA a pripravi csv pro import chybejicich pokud je v url pozadovano
 if($userCompareOn) {
@@ -275,7 +317,7 @@ if($userCompareOn) {
 // vrati zip XML
 if($downloadXML) {
     $fname = "ImportXML_from".$ticket_from."_to".$ticket_to.".zip";
-    prepareFinalXmlDoc("ImportXML/ImportXML_from".$ticket_from."_to".$ticket_to.".xml");
+    prepareFinalXmlDoc("ImportXML/ImportXML_from".$ticket_from."_to".$ticket_to."_all.xml",$exportAllFileName);
     exec("zip -P ".$GLOBALS['config_zip_pwd']." -r ".$fname." ImportXML");
     exec("rm -f ImportXML/*");
     // send the right headers
@@ -301,6 +343,12 @@ if($downloadFiles) {
     fpassthru($fp);
     exec("rm ".$fname);
     exit;    
+}
+
+// prida cast dat do kumulovanych souboru
+if($commitDataToCumulFiles) {
+    commitDataToCumulDocs($exportAllFileName.".xmlBody",$exportExcludedFileName,$exportMissingRqUsersFileName);
+    exit;
 }
 
 // Vytvorime importni XML
@@ -609,7 +657,7 @@ fclose($fp);
 echo "Tickety vyexportovany do ".$exportFilename.".xml <BR/>\n";
 
 // ulozime body XML do velkeho souboru, hlavicku a paticku dostane az pri downloadu
-$fp = fopen($exportAllFileName.".xmlBody", "a");
+$fp = fopen($exportAllFileName.".xmlBody"."part", "w");
 fwrite($fp, $xmlBody);
 fclose($fp);
 $fp = fopen($exportAllFileName.".xmlDoc", "w");
@@ -628,7 +676,7 @@ if(count($RQusersToImport) > 0) {
     echo "Chybejici uzivatele vyexportovani do ".$exportFilename."_missingRqUsers.csv <BR/>";
 
     // zapiseme do soupisky za vsechny exporty dokud neprobehne download XML
-    $fpRQimport = fopen("ImportXML/missingRqUsersAll.csv", "a");
+    $fpRQimport = fopen($exportMissingRqUsersFileName."part", "w");
     fwrite($fpRQimport,$missingUser."\n");
     fclose($fpRQimport);
 

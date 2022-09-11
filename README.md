@@ -21,6 +21,7 @@ Pouziti:
 - vytvori se soubor export_from0_to100_excludedTickets.csv, kde jsou tickety, ktere nebyly naimportovany protoze nejsou uzavrene
 - vytvori se soubor export_from0_to100_missingRqUsers.csv, kde jsou emaily uzivatelu kteri jsou v esportovanem ticketu ale nejsou v RQ a je treba je pred importem export_from0_to100.xml nejdrive rucne v administraci RQ naimportovat
 - spoustet opakovane dle uvazeni dalsi bloky from=101&to=999 (vzdy vyexportuje pozadovany rozsah ticketu do jednoho xml souboru a do Import adresare prilohy)
+- vzdy po vyexportovani bloku vyse je nutno potvrdit, ze nedoslo k zastaveni na Vasi strane zavolanim localhost?commitData=1 (prenese prave pripravenou cast kumulovanych dat do finalnich souboru). Slouzi pro potvrzeni ze napr. nevyprsel timeout predchoziho volani na Vasi strane a stejna davka se jiz nebude znovu pregenerovavat
 - pokud jiz mate vyexportovano cca 2 tis ticketu tj. jste provedli from=1800&to=2000 je doporuceno zavolat url pro download ziskanych dat na Vas disk
 - dokud neni proveden download XML, jsou data XML importu, chybejicich uzivatelu a vyloucenych ticketu kumulovana do velkych souboru coz urychli nasledny import diky mensimu poctu nutnych importu
 - download dat ma dva prikazy from=0&to=2000&download=XML nebo from=0&to=2000&download=FILES kde 0-2000 slouzi jen k Vasemu pojmenovani vygenerovanych zip souboru pro import
