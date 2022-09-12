@@ -448,6 +448,13 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
                 if(!isset($ticket['owner_email']) || $ticket['owner_email'] == "") {
                    $ticket['owner_email'] = $GLOBALS['config_def_user'];
                 }
+                else {
+                    if(!filter_var($ticket['owner_email'], FILTER_VALIDATE_EMAIL)) {
+                        echo "Excluded ".$ticket['code']." (owner has invalid email address) <BR/>\n";                             
+                        writeExcludedTickets($exportFilename."_excludedTickets.csv",$ticket['id'].",".$ticket['code']);
+                        continue;
+                    }                    
+                }
 
                 // schovame si uzivatele, abychom ho pak na konci naimportili do RQ pres API
                 $users[$ticket['owner_contactid']]['email'] = $ticket['owner_email']; 
