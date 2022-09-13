@@ -185,14 +185,14 @@ function createCsvMissingUsers($usersImportFileName) {
 /**
  * 
  */
-function writeExcludedTickets($fileName,$row) {
+function writeExcludedTickets($fileName,$row,$exportExcludedFileName) {
     
     $fp = fopen($fileName, "a");
         fwrite($fp,$row."\n");
     fclose($fp);
 
     // zapis casti velkeho excluded listu
-    $fp = fopen($exportExcludedFileName."part", "w");
+    $fp = fopen($exportExcludedFileName."part", "a");
         fwrite($fp,$row."\n");
     fclose($fp);
 
@@ -372,6 +372,11 @@ if($commitDataToCumulFiles) {
     exit;
 }
 
+// vycistime pred spustenim nove davky
+if(file_exists($exportExcludedFileName."part")) {
+    exec("rm -f ".$exportExcludedFileName."part");
+}
+
 // Vytvorime importni XML
 // nacteme RQ users, abchom mohli porovnavat zda reporter ticketu je v RQ k dispozici
 $row = 1;
@@ -462,7 +467,7 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
                 //neimportovat otevrene, zapamatovat si index a doimportovat pozdeji
                 if(!$is_closed) {
                     echo "Excluded ".$ticket['code']." (ticket is OPEN) <BR/>\n";                             
-                    writeExcludedTickets($exportFilename."_excludedTickets.csv",$ticket['id'].",".$ticket['code']);
+                    writeExcludedTickets($exportFilename."_excludedTickets.csv",$ticket['id'].",".$ticket['code'],$exportExcludedFileName);
                     continue;
                 }
 
@@ -472,7 +477,7 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
                 else {
                     if(!filter_var($ticket['owner_email'], FILTER_VALIDATE_EMAIL)) {
                         echo "Excluded ".$ticket['code']." (owner has invalid email address) <BR/>\n";                             
-                        writeExcludedTickets($exportFilename."_excludedTickets.csv",$ticket['id'].",".$ticket['code']);
+                        writeExcludedTickets($exportFilename."_excludedTickets.csv",$ticket['id'].",".$ticket['code'],$exportExcludedFileName);
                         continue;
                     }                    
                 }
