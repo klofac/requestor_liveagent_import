@@ -287,6 +287,24 @@ function commitDataToCumulDocs($exportXmlAllFileName,$exportExcludedFileName,$ex
 
 /**
  * 
+ */
+function deduplicateFile($filename) {
+
+    if(file_exists($filename)) {
+        $contentArr  = explode("\n",file_get_contents($filename));
+
+        sort($contentArr);
+        $contentOut  = implode("\n",array_unique($contentArr));
+
+        // prepiseme soubor jen unikatnimi hodnotami
+        $fp = fopen($filename, "w");
+        fwrite($fp, $contentOut);
+        fclose($fp);
+
+    }   
+}
+/**
+ * 
  * MAIN PROGRAM
  * 
  */
@@ -318,8 +336,11 @@ if($userCompareOn) {
 if($downloadXML) {
     $fname = "ImportXML_from".$ticket_from."_to".$ticket_to.".zip";
     prepareFinalXmlDoc("ImportXML/ImportXML_from".$ticket_from."_to".$ticket_to."_all.xml",$exportAllFileName);
+    deduplicateFile($exportMissingRqUsersFileName);
+
     exec("zip -P ".$GLOBALS['config_zip_pwd']." -r ".$fname." ImportXML");
     exec("rm -f ImportXML/*");
+    
     // send the right headers
     $fp = fopen($fname, 'rb');
     header("Content-Type: application/zip");
