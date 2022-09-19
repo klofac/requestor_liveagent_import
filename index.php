@@ -92,6 +92,11 @@ function attachmentDownload($foldername,$filename,$downloadUrl) {
     
     curl_setopt($cht, CURLOPT_FILE, $fp);
     curl_setopt($cht, CURLOPT_HEADER, 0);
+    curl_setopt($cht, CURLOPT_FOLLOWLOCATION, true);
+    //curl_setopt($cht, CURLOPT_VERBOSE, 1);
+    curl_setopt($cht, CURLOPT_HTTPHEADER, array(
+        'apikey:'.$GLOBALS['config_api_key']
+    ));    
 
     curl_exec($cht);
 
