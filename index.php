@@ -81,7 +81,7 @@ function attachmentMetaDecode($source) {
 /**
  * Stahne prilohu do archivu do domluvene struktury
  */
-function attachmentDownload($foldername,$filename,$downloadUrl) {
+function attachmentDownload($foldername,$filename,$downloadUrl,$expectedFileSize,$ticketCode) {
     $cht = curl_init(str_replace("//","https://",stripslashes($downloadUrl)));
 
     if(!is_dir("./Import/".$foldername)) {
@@ -107,8 +107,16 @@ function attachmentDownload($foldername,$filename,$downloadUrl) {
 
     curl_close($cht);
     fclose($fp);
-    return $output; 
 
+    // oznamime kdyz nesedi stazena a ocekavana delka
+    if(filesize("./Import/".$foldername."/".$filename) != $expectedFileSize+1) {
+        $report = "Ticket: ".$ticketCode." Corrupted file: "."./Import/".$foldername."/".$filename." Saved: ".filesize("./Import/".$foldername."/".$filename)." bytes, expected:".$expectedFileSize." bytes\n";
+        echo $report."<BR/>";
+
+        $fp = fopen("./ImportXML/corruptedFiles.txt", "a");
+        fwrite($fp, $report);
+        fclose($fp);
+    }
 }
 
 function createCsvMissingUsers($usersImportFileName) {
@@ -638,7 +646,7 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
                                                 if($messagePart['type']=='F') {
 
                                                     $filemetadata = attachmentMetaDecode($messagePart['message']);
-                                                    attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['download_url']); 
+                                                    attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['download_url'],$filemetadata['size'],$ticket['code']); 
 
                                                     //-- element
                                                     xmlwriter_start_element($xw, 'ImportTicketMessageAttachment');
