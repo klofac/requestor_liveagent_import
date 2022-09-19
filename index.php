@@ -109,7 +109,7 @@ function attachmentDownload($foldername,$filename,$downloadUrl,$expectedFileSize
     fclose($fp);
 
     // oznamime kdyz nesedi stazena a ocekavana delka
-    if(filesize("./Import/".$foldername."/".$filename) != $expectedFileSize+1) {
+    if(filesize("./Import/".$foldername."/".$filename) != $expectedFileSize) {
         $report = "Ticket: ".$ticketCode." Corrupted file: "."./Import/".$foldername."/".$filename." Saved: ".filesize("./Import/".$foldername."/".$filename)." bytes, expected:".$expectedFileSize." bytes\n";
         echo $report."<BR/>";
 
