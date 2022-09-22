@@ -632,7 +632,7 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
                                                         xmlwriter_write_cdata($xw, $messagePart['message']."<BR/>");
                                                 }
                                                 else {
-                                                        xmlwriter_write_cdata($xw, nl2br(htmlentities($messagePart['message']))."<BR/>");
+                                                        xmlwriter_write_cdata($xw, nl2br(htmlentities((isset($messagePart['message']) && $messagePart['message'] != '' ? $messagePart['message'] : '-')))."<BR/>");
                                                 }
                                             }
                                         }                            
