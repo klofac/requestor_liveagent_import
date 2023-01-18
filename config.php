@@ -7,6 +7,7 @@ $config_def_user= "defUserEmailAddress";
 $config_hlp_url = "https://yourIpexHelpdeskUrl/";
 $config_hlp_user= "yourIpexHelpdeskApiUser";
 $config_hlp_pwd = "yourIpexHelpdeskApiUserPassword";
+$config_hlp_nacist_ticketu = 50;
 
 $config_tmpDB_hostname  = "yourMysqlServerHostname";
 $config_tmpDB_user      = "yourMysqlServerUser";

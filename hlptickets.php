@@ -52,7 +52,7 @@ function getTicketLA($messages) {
 /**
  * MAIN
  */
-    $nacistTicketu = 30;
+    $nacistTicketu = $GLOBALS['config_hlp_nacist_ticketu'];
     
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $mysqli = new mysqli($GLOBALS['config_tmpDB_hostname'], $GLOBALS['config_tmpDB_user'], $GLOBALS['config_tmpDB_pwd'], $GLOBALS['config_tmpDB_db'],3306);
