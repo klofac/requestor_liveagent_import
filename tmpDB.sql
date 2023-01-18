@@ -15,5 +15,16 @@ CREATE TABLE `yourTableName` (
   PRIMARY KEY (`ticketID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `yourTableName2` (
+  `laID` varchar(25) NOT NULL,
+  `laTicketID` varchar(25) NOT NULL,
+  `ticketCreated` datetime NOT NULL,
+  `ticketChanged` datetime NOT NULL,
+  `ticketSluzba` varchar(25) NOT NULL,
+  `ticketStatus` char(3) NOT NULL,
+  `importIndex` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`laID`),
+  KEY `importIndex` (`importIndex`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- 2023-01-17 21:19:51

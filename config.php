@@ -7,10 +7,12 @@ $config_def_user= "defUserEmailAddress";
 $config_hlp_url = "https://yourIpexHelpdeskUrl/";
 $config_hlp_user= "yourIpexHelpdeskApiUser";
 $config_hlp_pwd = "yourIpexHelpdeskApiUserPassword";
-$config_hlp_nacist_ticketu = 50;
 
 $config_tmpDB_hostname  = "yourMysqlServerHostname";
 $config_tmpDB_user      = "yourMysqlServerUser";
 $config_tmpDB_pwd       = "yourMysqlServerUserPassword";
 $config_tmpDB_db        = "yourMysqlServerDatabase";
 $config_tmpDB_table     = "yourTableName";
+$config_tmpDB_tableLA   = "yourTableName2";
+$config_hlp_nacist_ticketu = 50;
+$config_la_nacist_ticketu = 20;
