@@ -62,6 +62,8 @@ function getTicketLA($messages) {
     $tRes = $tMax->fetch_object();
     $tIDmax = (isset($tRes->ticketIDmax) ? $tRes->ticketIDmax : 1);
 
+    $time_start = microtime(true);
+
     for($i=$tIDmax+1;$i<$tIDmax+$nacistTicketu+1;$i++) {
         $ticket = apicall_HLP("Tickets/GetTicket/".$i);
         //print_r($ticket);
@@ -69,3 +71,7 @@ function getTicketLA($messages) {
         echo $laTicketID.",".$ticket->TicketREF.",".$ticket->TicketId.",".$ticket->ServiceName.",".$ticket->CreatedUTC."<BR/>\n";
         $mysqli->query("INSERT INTO ".$GLOBALS['config_tmpDB_table']." SET ticketID ='".$i."', ticketREF='".$ticket->TicketREF."', ticketSluzba='".$ticket->ServiceName."', ticketSluzbaID='".$ticket->ServiceId."', ticketCreated='".$ticket->CreatedUTC."', laTicketID='".$laTicketID."'");
     }
+
+    $time_end = microtime(true);
+
+    echo "Finished in ".round($time_end - $time_start)." sec";
