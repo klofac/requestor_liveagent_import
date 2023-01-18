@@ -39,7 +39,7 @@ function getTicketLA($messages) {
     if(isset($messages)) {
         foreach($messages as $key => $message) {
             if($key == 0) {
-                $output = substr(str_replace("<p>","",str_replace("</p>","",str_replace("Importováno z ","",$message->Body))),0,25);
+                $output = htmlentities(substr(str_replace("<p>","",str_replace("</p>","",str_replace("Importováno z ","",$message->Body))),0,25));
                 break;
             }
         }
@@ -68,7 +68,7 @@ function getTicketLA($messages) {
         $ticket = apicall_HLP("Tickets/GetTicket/".$i);
         //print_r($ticket);
         $laTicketID = getTicketLA($ticket->UserMessages);
-        echo $laTicketID.",".$ticket->TicketREF.",".$ticket->TicketId.",".$ticket->ServiceName.",".$ticket->CreatedUTC."<BR/>\n";
+        echo $ticket->TicketId.",".$ticket->TicketREF.",".$ticket->ServiceName.",".$ticket->CreatedUTC.",".$laTicketID."<BR/>\n";
         $mysqli->query("INSERT INTO ".$GLOBALS['config_tmpDB_table']." SET ticketID ='".$i."', ticketREF='".$ticket->TicketREF."', ticketSluzba='".$ticket->ServiceName."', ticketSluzbaID='".$ticket->ServiceId."', ticketCreated='".$ticket->CreatedUTC."', laTicketID='".$laTicketID."'");
     }
 
