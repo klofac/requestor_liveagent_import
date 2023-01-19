@@ -77,9 +77,12 @@ function getTicketLA($messages) {
     for($i=$tIDmax+1;$i<$tIDmax+$nacistTicketu+1;$i++) {
         $ticket = apicall_HLP("Tickets/GetTicket/".$i);
         //print_r($ticket);
-        $laTicketID = getTicketLA($ticket->UserMessages);
-        echo $ticket->TicketId.",".$ticket->TicketREF.",".$ticket->ServiceName.",".$ticket->CreatedUTC.",".$laTicketID."<BR/>\n";
-        $mysqli->query("INSERT INTO ".$GLOBALS['config_tmpDB_table']." SET ticketID ='".$i."', ticketREF='".$ticket->TicketREF."', ticketSluzba='".$ticket->ServiceName."', ticketSluzbaID='".$ticket->ServiceId."', ticketCreated='".$ticket->CreatedUTC."', laTicketID='".$laTicketID."'");
+        //pojistka az narazime na konec
+        if(isset($ticket->UserMessages)) {
+            $laTicketID = getTicketLA($ticket->UserMessages);
+            echo $ticket->TicketId.",".$ticket->TicketREF.",".$ticket->ServiceName.",".$ticket->CreatedUTC.",".$laTicketID."<BR/>\n";
+            $mysqli->query("INSERT INTO ".$GLOBALS['config_tmpDB_table']." SET ticketID ='".$i."', ticketREF='".$ticket->TicketREF."', ticketSluzba='".$ticket->ServiceName."', ticketSluzbaID='".$ticket->ServiceId."', ticketCreated='".$ticket->CreatedUTC."', laTicketID='".$laTicketID."'");
+        }
     }
 
     $time_end = microtime(true);
