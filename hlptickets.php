@@ -36,13 +36,20 @@ function apicall_HLP(string $command) {
  */
 function getTicketLA($messages) {
     $output = "";
+    $shortMessages = array();
+    $indexMax=$messages[0]->id;
+    $firstMessageKey = 0;
+
     if(isset($messages)) {
+        //najdeme message s nejnizsim ID, to bude first message
         foreach($messages as $key => $message) {
-            if($key == 0) {
-                $output = htmlentities(substr(str_replace("<p>","",str_replace("</p>","",str_replace("Importováno z ","",$message->Body))),0,25));
-                break;
+            if($indexMax < $message->id) {
+                $indexMax = $message->id;
+                $firstMessageKey = $key;
             }
         }
+        $output = htmlentities(substr(str_replace("<p>","",str_replace("</p>","",str_replace("Importováno z ","",$messages[$firstMessageKey]->Body))),0,25));
+
     } else {
         $output = "Nezjisteno";
     }    
