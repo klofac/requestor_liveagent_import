@@ -82,7 +82,7 @@ function attachmentMetaDecode($source) {
  * Stahne prilohu do archivu do domluvene struktury
  */
 function attachmentDownload($foldername,$filename,$downloadUrl,$expectedFileSize,$ticketCode) {
-    $cht = curl_init(str_replace("//","https://",stripslashes($downloadUrl)));
+$cht = curl_init(str_replace("/view","/download",str_replace("/api/v3/","",$GLOBALS['config_api_url'].$downloadUrl)));
 
     if(!is_dir("./Import/".$foldername)) {
         mkdir("./Import/".$foldername, 0777, true);
@@ -646,7 +646,7 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
                                                 if($messagePart['type']=='F') {
 
                                                     $filemetadata = attachmentMetaDecode($messagePart['message']);
-                                                    attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['download_url'],$filemetadata['size'],$ticket['code']); 
+                                                    attachmentDownload($ticket['id'],$filemetadata['id'],$filemetadata['view_url'],$filemetadata['size'],$ticket['code']); 
 
                                                     //-- element
                                                     xmlwriter_start_element($xw, 'ImportTicketMessageAttachment');
