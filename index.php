@@ -457,7 +457,7 @@ $res2 = xmlwriter_set_indent_string($xwDoc, ' ');
                 $tickets = apicall_LA("tickets?_filters={\"code\":\"".$searchTicketCode."\"}");
             }
             else {
-                $tickets = apicall_LA("tickets?_from=".$ticket_from."&_to=".$ticket_to);  
+                $tickets = apicall_LA("tickets?_from=".$ticket_from."&_to=".$ticket_to."&_sortField=date_created");   // &_sortField=date_changed&_sortDir=DESC
             }
 //print_r($tickets);
 
