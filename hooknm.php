@@ -1,8 +1,13 @@
 <?php
 /**
- * obsluha webhooku LA ticket create
- * Cilem je, aby se do ticketu v Helpdesku vytvoril novy ticket s message a prilohami, podle ticketu v LA
+ * obsluha webhooku LA ticket update
+ * Cilem je, aby se do ticketu v Helpdesku pripsala message s prilohami, podle message v LA ktera zpusobila hook update
+ * TODO Tady se asi bude muset hledat podle Message ID
  */
+exit;
+exit;
+exit;
+
 require "config.php";
 require "ipex_helpdesk.php";
 require "liveagent.php";
@@ -13,10 +18,14 @@ if(!isset($_GET['ticketCode'])) die("Chybi povinny parametr ticketCode.");
 //mereni doby behu programu
 $time_start = microtime(true);
 
+
 $searchTicketCode = $_GET['ticketCode'];
 
 $helpdesk  = new \Ipex\Helpdesk\IpexHelpdesk($GLOBALS['config_hlp_url'],$GLOBALS['config_hlp_user'],$GLOBALS['config_hlp_pwd']);
 $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['config_api_key']);
+
+$ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
+$helpdesk->newMessage($ticks->Tickets->Items[0]->TicketREF,0,"Dalsi zprava");
 
 $laTickets = $liveagent->getTicket($searchTicketCode);
 //print_r($laTickets);
@@ -53,7 +62,7 @@ foreach($laTickets as $ticket) {
 
     $subject    = $ticket['subject']." (LA:".$ticket['code'].")";
     $message    = 'Importováno z '.$ticket['code'];
-    $email      = $ticket['owner_email'];
+    $email      = "klofinator@mailinator.com"; //$ticket['owner_email'];
     $internalGroupId = null;
     $isMessageHtml = false;
     $ticketType = 3;
@@ -70,6 +79,7 @@ foreach($laTickets as $ticket) {
     }
 
     // vyvtorime ticket v Helpdesku
+    $serviceId = 45;//jen pro ipex-test, na produkci zrusit
     $newHlpTicket = $helpdesk->newAnonymousTicket($email,$ticketType,$serviceId,$subject,$message,$isMessageHtml);
     //print_r($newHlpTicket);    
     

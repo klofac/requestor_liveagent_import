@@ -107,7 +107,7 @@ class IpexHelpdesk {
         string $message, 
         bool $isMessageHtml = false, 
         bool $isPrivate = false,
-        array $attachments = array(
+        $attachments = array(
                 array(
                     "FileName" => "",
                     "ContentType" => "",
@@ -145,5 +145,19 @@ class IpexHelpdesk {
 
     }
 
+    /**
+     * searchTickets
+     * @param int $pageIndex Default 0
+     * @param int $pageSize Default 10
+     * @param string $searchText Required
+     */
+    public function searchTickets(int $pageIndex = 0, int $pageSize = 10, string $searchText) {
+        $body["PageIndex"]      = $pageIndex;
+        $body["PageSize"]       = $pageSize;
+        $body["Value"]          = $searchText;
+
+        //print_r(json_encode($body));
+        return $this->apiCall("POST","Tickets/SearchTickets",json_encode($body));
+    }
 }
 
