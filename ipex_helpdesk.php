@@ -159,5 +159,60 @@ class IpexHelpdesk {
         //print_r(json_encode($body));
         return $this->apiCall("POST","Tickets/SearchTickets",json_encode($body));
     }
+
+    /**
+     * getTicketCustomFormFieldById
+     * @param array $ticketCustomFormFieldArray     Custom Form Field Array from getTicket result (e.g. $hlpTicket->CustomForms[0]->CustomFormFieldsData)
+     * @param int   $customFormId                   ID of Custom Form
+     * @param int   $customFormFieldId              ID of Custom Form Field which you are searching
+     */
+    public function getTicketCustomFormFieldById(array $ticketCustomFormFieldArray, int $customFormId, int $customFormFieldId) {
+        foreach ($ticketCustomFormFieldArray as $formKey => $formArray) {
+            if($formArray->CustomFormId === $customFormId) {
+                foreach ($formArray->CustomFormFieldsData as $key => $value) {
+                    if($value->CustomFormFieldId === $customFormFieldId) {
+                        return $value;
+                        break;    
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * updateCustomForm Updates ticket's custom form fields. You can send one or more ticket custom form field values to update. If you need to get the custom form definition first, use GetCustomFormsForTicket.
+     * @param int   $ticketId                The ticket Id.
+     * @param int   $customFormId            The custom form Id.
+     * @param int   $serviceId               The Service id must be filled or category item id.
+     * @param int   $categoryItemId          The Service id must be filled or category item id.
+     * @param array $customFormFieldsData    The data. If you don't send the custom form field record at all, the field won't be edited.
+     *         {
+     *           "CustomFormFieldId": int,
+     *           "TextBoxValue": string,
+     *           "DecimalValue": decimal number,
+     *           "IntegerValue": int,
+     *           "CheckBoxValue": boolean,
+     *           "DateValue": date,
+     *           "SelectedCustomFormFieldItemId": integer,
+     *           "CustomFormFieldItems": [      //CheckBoxList
+     *             { 
+     *              "CustomFormFieldItemId": int
+     *              "CheckBoxValue": boolean
+     *             }
+     *           ]
+     *         }
+     */
+    public function updateCustomForm(int $ticketId, int $customFormId = 0, int $serviceId = 0, array $customFormFieldsData) {
+        {
+            $body["TicketId"]               = $ticketId;
+            $body["CustomFormId"]           = $customFormId;
+            $body["ServiceId"]              = $serviceId;
+            $body["CategoryItemId"]         = $categoryItemId;
+            $body["CustomFormFieldsData"]   = $customFormFieldsData;
+
+            //print_r(json_encode($body));
+            return $this->apiCall("POST","Tickets/UpdateCustomForm",json_encode($body));
+        }        
+    }
 }
 

@@ -7,8 +7,14 @@ require "config.php";
 require "ipex_helpdesk.php";
 require "liveagent.php";
 
+//Indexy naimportovanych LA messages jsou ulozeny v 
+$customFormFieldId = 77;
+$customFormId = 26;
+
 // overeni vstupu
 if(!isset($_GET['ticketCode'])) die("Chybi povinny parametr ticketCode.");
+
+// todo: sleep pockat az automatizace dodela operace nad novym ticketem a naimportujeme i interni komentare
 
 //mereni doby behu programu
 $time_start = microtime(true);
@@ -74,8 +80,14 @@ foreach($laTickets as $ticket) {
     //print_r($newHlpTicket);    
     
     if(isset($messages) && $messages['message'] != 'Service Unavailable') {
+
+        $messagesIndexesNew = array();
+
         //pripravime message do HLP
         foreach($messages as $message) {
+            
+            $messagesIndexesNew[] = $message['id'];
+
             $isMessageHtml = true;                    //bude vzdy HTML a zdrojove data pripadne z textu prevadime na HTML
             $isPrivate = $liveagent->isInternalType($message['type']);  //privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
 
@@ -84,7 +96,7 @@ foreach($laTickets as $ticket) {
             $attachmentsArray = null;
             
             //poskladame z jednotlivych casti jako jednu zpravu
-            $messageFinal = ""; 
+            $messageFinal =  "LaTime:".$message['datecreated']."<BR/>"; 
             foreach($message['messages'] as $messagePart) {
                 if($messagePart['message'] != "" ) { 
                 
@@ -124,6 +136,10 @@ foreach($laTickets as $ticket) {
             $result = $helpdesk->newMessage("",$newHlpTicket->TicketId,$messageFinal,$isMessageHtml,$isPrivate,$attachmentsArray);
 
         }
+
+        //echo "New indexes: ".implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew))."<BR/>\n";
+        $res = $helpdesk->updateCustomForm($newHlpTicket->TicketId,$customFormId,$serviceId,array ( array ("CustomFormFieldId" => $customFormFieldId, "TextBoxValue" => implode(',',$messagesIndexesNew))));
+
     }
 }
   
