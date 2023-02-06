@@ -10,6 +10,7 @@ require "liveagent.php";
 //Indexy naimportovanych LA messages jsou ulozeny v 
 $customFormFieldId = 77;
 $customFormId = 26;
+$problemsQueueId = 8;
 
 // overeni vstupu
 if(!isset($_GET['ticketCode'])) die("Chybi povinny parametr ticketCode.");
@@ -72,7 +73,7 @@ foreach($laTickets as $ticket) {
         $serviceId = $liveagent->convertDepartmentToService((isset($ticket['departmentid']) ? $ticket['departmentid'] : ''));
     }
     else {
-        $serviceId = 8; //'Kontrola importu z LA'
+        $serviceId = $problemsQueueId; //'Kontrola importu z LA'
     }
 
     // vyvtorime ticket v Helpdesku
@@ -140,6 +141,12 @@ foreach($laTickets as $ticket) {
         //echo "New indexes: ".implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew))."<BR/>\n";
         $res = $helpdesk->updateCustomForm($newHlpTicket->TicketId,$customFormId,$serviceId,array ( array ("CustomFormFieldId" => $customFormFieldId, "TextBoxValue" => implode(',',$messagesIndexesNew))));
 
+    }
+
+    // pokud je LA ticket Closed tak zavreme i HLP ticket
+    if ($is_closed) {
+        $res1 = $helpdesk->workflowPush($newHlpTicket->TicketId,null,301,null,null); //vezmeme z fronty
+        $res2 = $helpdesk->workflowPush($newHlpTicket->TicketId,null,314,null,null); //zavreme
     }
 }
   

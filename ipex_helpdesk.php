@@ -214,5 +214,24 @@ class IpexHelpdesk {
             return $this->apiCall("POST","Tickets/UpdateCustomForm",json_encode($body));
         }        
     }
+
+    /**
+     * WorkflowPush
+     * @param int       $ticketId   	(Required TicketId OR TicketREF) The ID of the ticket
+     * @param string    $ticketREF      (Required TicketId OR TicketREF) The reference ID of the ticket
+     * @param int       $action         (Required) Right workflow action for the Ticket's state is needed. Get a list of available actions using GetTicket method.
+     * @param string    $userProviderKey Optional parameter. Only some Actions need to specify this parameter. These are IncidentAssign, IncidentAssignOther, IncidentFunctionEscalate, ServiceRequestAssign, ServiceRequestAssignOther, ProblemAssign and ChangeAssign.
+     * @param int       $serviceId      Optional parametr. Only some Actions need to specify this parameter. There are TicketConvertToIncident, TicketConvertToServiceRequest.
+     */
+    public function workflowPush(int $ticketId = null, string $ticketREF = null, int $action, string $userProviderKey = null, int $serviceId = null) {
+        $body["TicketId"] =  $ticketId;
+        $body["TicketREF"] = $ticketREF;
+        $body["Action"] = $action;
+        $body["UserProviderKey"] = $userProviderKey;
+        $body["ServiceId"] = $serviceId;
+
+        //print_r(json_encode($body));
+        return $this->apiCall("POST","Tickets/WorkflowPush",json_encode($body));
+    }
 }
 
