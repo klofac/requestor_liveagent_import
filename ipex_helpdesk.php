@@ -100,21 +100,15 @@ class IpexHelpdesk {
      * @param string    $message    (Required) The message body
      * @param bool      $isMessageHtml  If true, sent message is in HTML format
      * @param bool      $isPrivate  If true, the message is marked as a private one. Private messages is visible only for Operators and can be send by Operators only.
+     * @param array     $attachments array("FileName" => "", "ContentType" => "", "ContentLength" => 0, "Data" => "")
      */
     public function newMessage(
-        string $ticketRef = "", 
-        int $ticketId = 0, 
+        string $ticketRef = null, 
+        int $ticketId = null, 
         string $message, 
         bool $isMessageHtml = false, 
         bool $isPrivate = false,
-        $attachments = array(
-                array(
-                    "FileName" => "",
-                    "ContentType" => "",
-                    "ContentLength" => 0,
-                    "Data" => "" 
-                )
-            )
+        array $attachments = null
         ) 
         {
     

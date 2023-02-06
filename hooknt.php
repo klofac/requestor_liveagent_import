@@ -76,6 +76,8 @@ foreach($laTickets as $ticket) {
         $serviceId = $problemsQueueId; //'Kontrola importu z LA'
     }
 
+    $serviceId = 45;//jen pro ipex-test, na produkci zrusit
+    
     // vyvtorime ticket v Helpdesku
     $newHlpTicket = $helpdesk->newAnonymousTicket($email,$ticketType,$serviceId,$subject,$message,$isMessageHtml);
     //print_r($newHlpTicket);    
@@ -111,7 +113,7 @@ foreach($laTickets as $ticket) {
                         $messageFinal .= $messagePart['message']."<BR/>";
                     }
                     else {
-                        $messageFinal .= nl2br(htmlentities((isset($messagePart['message']) && $messagePart['message'] != '' ? $messagePart['message'] : '-')))."<BR/>";
+                        $messageFinal .= nl2br(htmlentities((isset($messagePart['message']) && $messagePart['message'] !== '' ? $messagePart['message'] : '-')))."<BR/>";
                     }
                 }
             }                            
@@ -134,7 +136,7 @@ foreach($laTickets as $ticket) {
                 }
             } 
             //print_r($attachmentsArray);
-            $result = $helpdesk->newMessage("",$newHlpTicket->TicketId,$messageFinal,$isMessageHtml,$isPrivate,$attachmentsArray);
+            $result = $helpdesk->newMessage(null,$newHlpTicket->TicketId,$messageFinal,$isMessageHtml,$isPrivate,$attachmentsArray);
 
         }
 
