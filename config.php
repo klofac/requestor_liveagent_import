@@ -16,3 +16,8 @@ $config_tmpDB_table     = "yourTableName";
 $config_tmpDB_tableLA   = "yourTableName2";
 $config_hlp_nacist_ticketu = 50;
 $config_la_nacist_ticketu = 20;
+
+//kde je ulozen seznam indexu naimportovanych messages
+$config_hlp_custom_form_field_id = 0;
+$config_hlp_custom_form_id = 0;
+$config_hlp_problems_queue_id = 0;

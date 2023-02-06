@@ -8,9 +8,9 @@ require "ipex_helpdesk.php";
 require "liveagent.php";
 
 //Indexy naimportovanych LA messages jsou ulozeny v 
-$customFormFieldId = 77;
-$customFormId = 26;
-$problemsQueueId = 8;
+$customFormFieldId = $GLOBALS['config_hlp_custom_form_field_id'];
+$customFormId = $GLOBALS['config_hlp_custom_form_id'];
+$problemsQueueId = $GLOBALS['config_hlp_problems_queue_id'];
 
 // overeni vstupu
 if(!isset($_GET['ticketCode'])) die("Chybi povinny parametr ticketCode.");
