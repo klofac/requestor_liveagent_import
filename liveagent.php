@@ -104,6 +104,54 @@ class Liveagent {
     }
 
     /**
+     * 
+     */
+    public function explainTicketStatus(string $laStatus) {
+        $status["I"] = "Init";
+        $status["N"] = "New";
+        $status["T"] = "Chatting";
+        $status["P"] = "Calling";
+        $status["R"] = "Resolved";
+        $status["X"] = "Deleted";
+        $status["B"] = "Spam";
+        $status["A"] = "Answered";
+        $status["C"] = "Open";
+        $status["W"] = "Postponed";
+
+        return $status[$laStatus];
+    }
+
+    /**
+     * 
+     */
+    public function convertLaStatusToHlpState($laStatus) {
+        //I - init N - new T - chatting P - calling R - resolved X - deleted B - spam A - answered C - open W - postponed
+        switch ($laStatus) {
+            case 'R':
+                $result = 6; //
+                break;
+            
+            case 'A':
+                $result = 3; //
+                break;
+            
+            case 'C':
+                $result = 4; //
+                break;
+        
+            case 'W':
+                $result = 7; //
+                break;
+                        
+            default:
+                $result = 5; //
+                break;
+        }
+
+        return $result;
+    }
+
+    /**
      * getTicket
      * @param string $searchTicketCode
      */

@@ -7,6 +7,18 @@ require "config.php";
 require "ipex_helpdesk.php";
 require "liveagent.php";
 
+/**
+ * 
+ */
+function mylog($text) {
+    $time = date("Y-m-d H:i:s")." ";
+    $fp = fopen("hooknt.log", "a");
+    fwrite($fp, $time.$text);
+    fclose($fp);
+
+    echo $time.nl2br($text);
+}
+
 //Indexy naimportovanych LA messages jsou ulozeny v 
 $customFormFieldId = $GLOBALS['config_hlp_custom_form_field_id'];
 $customFormId = $GLOBALS['config_hlp_custom_form_id'];
@@ -21,6 +33,8 @@ if(!isset($_GET['ticketCode'])) die("Chybi povinny parametr ticketCode.");
 $time_start = microtime(true);
 
 $searchTicketCode = $_GET['ticketCode'];
+
+mylog($searchTicketCode." START \n");
 
 $helpdesk  = new \Ipex\Helpdesk\IpexHelpdesk($GLOBALS['config_hlp_url'],$GLOBALS['config_hlp_user'],$GLOBALS['config_hlp_pwd']);
 $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['config_api_key']);
@@ -76,12 +90,16 @@ foreach($laTickets as $ticket) {
         $serviceId = $problemsQueueId; //'Kontrola importu z LA'
     }
 
+    // -------------------------------------
+    //TODO Odstranit po spusteni do produkce, jen pro testy na ipex-test
     $serviceId = 45;//jen pro ipex-test, na produkci zrusit
+    // -------------------------------------
     
     // vyvtorime ticket v Helpdesku
     $newHlpTicket = $helpdesk->newAnonymousTicket($email,$ticketType,$serviceId,$subject,$message,$isMessageHtml);
     //print_r($newHlpTicket);    
-    
+    mylog($searchTicketCode." Vytvoren ticket: ".$newHlpTicket->TicketREF." ve sluzbe: ".$serviceId." \n");
+
     if(isset($messages) && $messages['message'] != 'Service Unavailable') {
 
         $messagesIndexesNew = array();
@@ -90,6 +108,7 @@ foreach($laTickets as $ticket) {
         foreach($messages as $message) {
             
             $messagesIndexesNew[] = $message['id'];
+            mylog($searchTicketCode." Save message: ".$message['id']."\n");
 
             $isMessageHtml = true;                    //bude vzdy HTML a zdrojove data pripadne z textu prevadime na HTML
             $isPrivate = $liveagent->isInternalType($message['type']);  //privatni jen interni komenty jinak public aby se ukazala tabulka v HTML
@@ -142,6 +161,7 @@ foreach($laTickets as $ticket) {
 
         //echo "New indexes: ".implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew))."<BR/>\n";
         $res = $helpdesk->updateCustomForm($newHlpTicket->TicketId,$customFormId,$serviceId,array ( array ("CustomFormFieldId" => $customFormFieldId, "TextBoxValue" => implode(',',$messagesIndexesNew))));
+        mylog($searchTicketCode." Save indexes: ".implode(',',$messagesIndexesNew)." \n");
 
     }
 
@@ -149,9 +169,16 @@ foreach($laTickets as $ticket) {
     if ($is_closed) {
         $res1 = $helpdesk->workflowPush($newHlpTicket->TicketId,null,301,null,null); //vezmeme z fronty
         $res2 = $helpdesk->workflowPush($newHlpTicket->TicketId,null,314,null,null); //zavreme
+        mylog($searchTicketCode." Stav HLP ticketu zmenen prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction(301)." \n");
+        mylog($searchTicketCode." Stav HLP ticketu zmenen prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction(314)." \n");
+    }
+    else {
+        mylog($searchTicketCode." Stav HLP ticketu zustava: Ve fronte \n");
     }
 }
-  
+
+mylog($searchTicketCode." FINISH \n");
+
 $time_end = microtime(true);
 
 echo "Finished in ".round($time_end - $time_start)." sec";

@@ -227,5 +227,179 @@ class IpexHelpdesk {
         //print_r(json_encode($body));
         return $this->apiCall("POST","Tickets/WorkflowPush",json_encode($body));
     }
+
+    /**
+     * ticketChangeService
+     * @param int $ticketId     (Required) The ticket Id where to change the service.
+     * @param int $serviceId    Target Service Id.
+     */
+    public function ticketChangeService(int $ticketId, int $serviceId) {
+        $body["TicketId"]   = $ticketId;
+        $body["ServiceId"]  = $serviceId;
+
+        //print_r(json_encode($body));
+        return $this->apiCall("POST","Tickets/ChangeService",json_encode($body));
+ 
+    }
+
+    /**
+     * explainTicketState
+     * @param int   $ticketState The actual workflow state of the Ticket specific to the type of the Ticket (TIC, INC, REQ, ...)
+     */
+    public function explainTicketState(int $ticketState) {
+        $state[101]="TicketInQueue";
+        $state[102]="TicketClosed";
+        $state[201]="IncidentInQueue";
+        $state[202]="IncidentAssigned";
+        $state[203]="IncidentRefusedAssigning";
+        $state[204]="IncidentConfirmed";
+        $state[205]="IncidentAnalyzed";
+        $state[206]="IncidentSuspended";
+        $state[207]="IncidentCompleted";
+        $state[212]="IncidentPostponed";
+        $state[208]="IncidentSolved";
+        $state[209]="IncidentRejected";
+        $state[210]="IncidentAccepted";
+        $state[211]="IncidentClosed";
+        $state[301]="ServiceRequestInQueue";
+        $state[302]="ServiceRequestAssigned";
+        $state[303]="ServiceRequestRefusedAssigning";
+        $state[304]="ServiceRequestConfirmed";
+        $state[305]="ServiceRequestAnalyzed";
+        $state[306]="ServiceRequestSuspended";
+        $state[307]="ServiceRequestCompleted";
+        $state[308]="ServiceRequestPostponed";
+        $state[309]="ServiceRequestSolved";
+        $state[310]="ServiceRequestRejected";
+        $state[311]="ServiceRequestAccepted";
+        $state[312]="ServiceRequestClosed";
+        $state[401]="ProblemRegistered";
+        $state[402]="ProblemAssigned";
+        $state[403]="ProblemInvestigated";
+        $state[404]="ProblemPostponed";
+        $state[405]="ProblemResolved";
+        $state[406]="ProblemRejected";
+        $state[407]="ProblemAccepted";
+        $state[408]="ProblemChangePending";
+        $state[409]="ProblemClosed";
+        $state[501]="ChangeRegistered";
+        $state[502]="ChangeAssigned";
+        $state[503]="ChangePreparation";
+        $state[504]="ChangePreparationDone";
+        $state[505]="ChangePreparationRejected";
+        $state[506]="ChangePreparationAccepted";
+        $state[507]="ChangeImplementation";
+        $state[508]="ChangeImplementationDone";
+        $state[512]="ChangeTesting";
+        $state[513]="ChangeTestFailed";
+        $state[509]="ChangeImplementationRejected";
+        $state[510]="ChangeImplementationAccepted";
+
+        return $state[$ticketState];
+    }
+
+    /**
+     * explainTicketWorkflowAction
+     * @param int $ticketAction   Workflow action for the Ticket
+     */
+    public function explainTicketWorkflowAction(int $ticketAction) {
+        $action[101]="TicketClose";
+        $action[102]="TicketConvertToIncident";
+        $action[103]="TicketConvertToServiceRequest";
+        $action[201]="IncidentTakeFromQueue";
+        $action[231]="IncidentReturnToQueue";
+        $action[202]="IncidentAssign";
+        $action[203]="IncidentRefuseAssigning";
+        $action[204]="IncidentAssignOther";
+        $action[205]="IncidentConfirmAssigning";
+        $action[206]="IncidentAnalyze";
+        $action[207]="IncidentSuspend";
+        $action[208]="IncidentComplete";
+        $action[209]="IncidentSuspendAgain";
+        $action[210]="IncidentConfirmCompletion";
+        $action[226]="IncidentPostpone";
+        $action[227]="IncidentCancelPostponement";
+        $action[229]="IncidentCancelPostponementByAutomation";
+        $action[211]="IncidentFinishSolution";
+        $action[221]="IncidentFinishSolutionCancel";
+        $action[212]="IncidentFinishSolutionAndClose";
+        $action[222]="IncidentFinishSolutionFromSuspended";
+        $action[223]="IncidentFinishSolutionAndCloseFromSuspended";
+        $action[213]="IncidentRefuseSolution";
+        $action[214]="IncidentAnalyzeAgain";
+        $action[215]="IncidentAcceptSolution";
+        $action[216]="IncidentClose";
+        $action[224]="IncidentCloseFromConfirmed";
+        $action[217]="IncidentReactivateToSolution";
+        $action[218]="IncidentReactivateToBeginning";
+        $action[219]="IncidentFunctionEscalate";
+        $action[220]="IncidentFunctionEscalatedTakeFromQueue";
+        $action[225]="IncidentFinishFunctionEscalation";
+        $action[301]="ServiceRequestTakeFromQueue";
+        $action[331]="ServiceRequestReturnToQueue";
+        $action[302]="ServiceRequestAssign";
+        $action[303]="ServiceRequestRefuseAssigning";
+        $action[304]="ServiceRequestAssignOther";
+        $action[305]="ServiceRequestConfirmAssigning";
+        $action[306]="ServiceRequestAnalyze";
+        $action[307]="ServiceRequestSuspend";
+        $action[308]="ServiceRequestComplete";
+        $action[309]="ServiceRequestSuspendAgain";
+        $action[310]="ServiceRequestConfirmCompletion";
+        $action[311]="ServiceRequestPostpone";
+        $action[312]="ServiceRequestCancelPostponement";
+        $action[329]="ServiceRequestCancelPostponementByAutomation";
+        $action[313]="ServiceRequestFinishSolution";
+        $action[321]="ServiceRequestFinishSolutionCancel";
+        $action[314]="ServiceRequestFinishSolutionAndClose";
+        $action[322]="ServiceRequestFinishSolutionFromSuspended";
+        $action[323]="ServiceRequestFinishSolutionAndCloseFromSuspended";
+        $action[315]="ServiceRequestRefuseSolution";
+        $action[316]="ServiceRequestAnalyzeAgain";
+        $action[317]="ServiceRequestAcceptSolution";
+        $action[318]="ServiceRequestClose";
+        $action[324]="ServiceRequestCloseFromConfirmed";
+        $action[319]="ServiceRequestReactivateToSolution";
+        $action[320]="ServiceRequestReactivateToBeginning";
+        $action[326]="ServiceRequestFunctionEscalate";
+        $action[327]="ServiceRequestFunctionEscalatedTakeFromQueue";
+        $action[328]="ServiceRequestFinishFunctionEscalation";
+        $action[401]="ProblemAssign";
+        $action[402]="ProblemInvestigate";
+        $action[403]="ProblemPostpone";
+        $action[404]="ProblemCancelPostponement";
+        $action[414]="ProblemCancelPostponementByAutomation";
+        $action[405]="ProblemReasonFound";
+        $action[406]="ProblemRefuseReason";
+        $action[407]="ProblemInvestigateAgain";
+        $action[408]="ProblemAcceptReason";
+        $action[409]="ProblemCreateRFC";
+        $action[410]="ProblemFinishChangeManagement";
+        $action[411]="ProblemClose";
+        $action[412]="ProblemReactivateToSolution";
+        $action[413]="ProblemReactivateToBeginning";
+        $action[501]="ChangeAssign";
+        $action[502]="ChangeTakeFromQueue";
+        $action[503]="ChangeStartPreparation";
+        $action[504]="ChangeFinishPreparation";
+        $action[505]="ChangeRejectPreparation";
+        $action[506]="ChangeStartPreparationAgain";
+        $action[507]="ChangeAcceptPreparation";
+        $action[508]="ChangeStartImplementation";
+        $action[509]="ChangeStartImplementationNoPreparation";
+        $action[510]="ChangeFinishImplementation";
+        $action[518]="ChangeRejectTest";
+        $action[519]="ChangeStartImplementationAgainAfterTestFailed";
+        $action[520]="ChangeAcceptTest";
+        $action[511]="ChangeRejectImplementation";
+        $action[512]="ChangeStartImplementationAgain";
+        $action[513]="ChangeAcceptImplementation";
+        $action[514]="ChangeClose";
+        $action[515]="ChangeCloseNoApproval";
+        $action[516]="ChangeReactivateToSolution";
+
+        return $action[$ticketAction];
+        
+    }
 }
 

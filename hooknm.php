@@ -7,12 +7,27 @@ require "config.php";
 require "ipex_helpdesk.php";
 require "liveagent.php";
 
+/**
+ * 
+ */
+function mylog($text) {
+    $time = date("Y-m-d H:i:s")." ";
+    $fp = fopen("hooknm.log", "a");
+    fwrite($fp, $time.$text);
+    fclose($fp);
+
+    echo $time.nl2br($text);
+}
+
 //Indexy naimportovanych LA messages jsou ulozeny v 
 $customFormFieldId = $GLOBALS['config_hlp_custom_form_field_id'];
 $customFormId = $GLOBALS['config_hlp_custom_form_id'];
 
 // overeni vstupu
-if(!isset($_GET['ticketCode'])) die("Chybi povinny parametr ticketCode.");
+if(!isset($_GET['ticketCode'])) {
+    mylog("Chybi povinny parametr ticketCode.");
+    exit;
+}
 
 //mereni doby behu programu
 $time_start = microtime(true);
@@ -25,12 +40,123 @@ $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['confi
 
 // zjistime jake LA message uz jsou v ticketu naimportovany. Indexy naimportovanych LA messages jsou ulozeny v customFormFieldu v ticketu
 $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
+if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
+    mylog("V Helpdesku nebyl nalezen ticket obsahujici v subjektu "."(LA:".$searchTicketCode.")");
+    exit;
+}
+
+mylog($searchTicketCode." START \n");
+
 $hlpTicket = $helpdesk->getTicket($ticks->Tickets->Items[0]->TicketREF);
 $customFormField77 = $helpdesk->getTicketCustomFormFieldById($hlpTicket->CustomForms,$customFormId,$customFormFieldId);
-$messagesIndexesImported = explode(',',$customFormField77->TextBoxValue);
+mylog($searchTicketCode." Load indexes: ".$customFormField77->TextBoxValue." \n");
+$messagesIndexesImported = explode(',',$customFormField77->TextBoxValue); //seznam jiz naimportovanych messages
+$hlpTicketServiceIdOld = $hlpTicket->ServiceId; //ve ktere fronte v HLP je nyni
+$hlpTicketStateOld = $hlpTicket->TicketState; //v jakem stavu zustal ticket v HLP
+$hlpTicketStateAvailable = $hlpTicket->AvailableTicketActions; //jake stavy mohou byt nastaveny (array)
+//print_r($hlpTicket);
 
+// nacteme LA ticket
 $laTickets = $liveagent->getTicket($searchTicketCode);
+$laTicketServiceIdNew = $liveagent->convertDepartmentToService($laTickets[0]['departmentid']); //ve ktere fronte ma byt podle LA ticketu
+$laTicketStateNew = $laTickets[0]['status']; //v jakem stavu je nyni LA ticket
 //print_r($laTickets);
+
+//stavy a jejich zmeny v Helpdesku
+//301 = In queue 
+//  -> 301 ServiceRequestTakeFromQueue (prejde na 305)
+//305 = Ready for support
+//  -> 307 ServiceRequestSuspend
+//  -> 314 ServiceRequestFinishSolutionAndClose (prejde na 312)
+//  -> 311 ServiceRequestPostpone (prejde na 308)
+//  -> 331 ServiceRequestReturnToQueue (prejde na 301)
+//308 = ServiceRequestPostponed
+//  -> 312 ServiceRequestCancelPostponement (prejde na 305)
+//  -> 331 ServiceRequestReturnToQueue (prejde na 301)
+//312 = ServiceRequestClosed
+//  -> 319 ServiceRequestReactivateToSolution (prejde na 305)
+//
+//klicovaci tabulka jak zmenit stavy v HLP podle noveho stavu v LA
+//I - init N - new T - chatting P - calling R - resolved X - deleted B - spam A - answered C - open W - postponed
+// R/301 -> 301 -> 314
+// R/305 -> 314
+// R/308 -> 312 -> 314
+// R/312 x
+//
+// A/301 -> 301 -> 314
+// A/305 -> 314
+// A/308 -> 312 -> 314
+// A/312 x
+//
+// W/301 -> 301 -> 311
+// W/305 -> 311
+// W/308 x
+// W/312 -> 319 -> 311
+//
+// C/301 x
+// C/305 -> 331
+// C/308 -> 331
+// C/312 -> 319 -> 331
+//
+// N/301 x
+// N/305 -> 331
+// N/308 -> 331
+// N/312 -> 319 -> 331
+$klicovaniStavu["R"][301] = array(301,314);
+$klicovaniStavu["R"][305] = array(314);
+$klicovaniStavu["R"][308] = array(312,314);
+$klicovaniStavu["R"][312] = array();
+
+$klicovaniStavu["A"][301] = array(301,314);
+$klicovaniStavu["A"][305] = array(314);
+$klicovaniStavu["A"][308] = array(312,314);
+$klicovaniStavu["A"][312] = array();
+
+$klicovaniStavu["W"][301] = array(301,311);
+$klicovaniStavu["W"][305] = array(311);
+$klicovaniStavu["W"][308] = array();
+$klicovaniStavu["W"][312] = array(319,311);
+
+$klicovaniStavu["C"][301] = array();
+$klicovaniStavu["C"][305] = array(331);
+$klicovaniStavu["C"][308] = array(331);
+$klicovaniStavu["C"][312] = array(319,331);
+
+$klicovaniStavu["N"][301] = array();
+$klicovaniStavu["N"][305] = array(331);
+$klicovaniStavu["N"][308] = array(331);
+$klicovaniStavu["N"][312] = array(319,331);
+
+//protoze potrebujeme pred prepnutim do finalniho stavu provest nejake ukony, prevedeme ticket nejprve na 305 a po provedeni oprav ho prepneme z 305 do finalniho stavu
+//klicovaci tabulka pro prepnuti do 305 (nasledne prepnuti do finalniho stavu probehne podle tabulky vyse, vyuzije se ale jen definice ze stavu 305 dale)
+$klicovaniNaStav305[301] = array(301);
+$klicovaniNaStav305[305] = array();
+$klicovaniNaStav305[308] = array(312);
+$klicovaniNaStav305[312] = array(319);
+
+mylog($searchTicketCode." Stav HLP ticketu: ".$hlpTicketStateOld."-".$helpdesk->explainTicketState($hlpTicketStateOld)." \n");
+mylog($searchTicketCode." Stav LA ticketu: ".$laTicketStateNew."-".$liveagent->explainTicketStatus($laTicketStateNew)." \n");
+
+//uvedeme HLP ticket do stavu, kdy je mozne zmenit sluzbu, prepneme ticket do stavu 305
+foreach ($klicovaniNaStav305[$hlpTicketStateOld] as $akce) {
+    $helpdesk->workflowPush($hlpTicket->TicketId,null,$akce);
+    mylog($searchTicketCode." Stav HLP ticketu zmenen na 305 prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction($akce)." \n");
+}
+
+//nyni muzeme delat upravy ticketu
+
+// -------------------------------------
+//TODO Odstranit po spusteni do produkce, jen pro testy na ipex-test
+$laTicketServiceIdNew=$hlpTicketServiceIdOld;
+// -------------------------------------
+
+// pokud doslo k presunu ticketu do jine fronty
+if($hlpTicketServiceIdOld !== $laTicketServiceIdNew) {
+    mylog($searchTicketCode." V LA ticketu je jine nastaveni departmentu nez je sluzba v Helpdesku, bude provedena zmena sluzby z ".$hlpTicketServiceIdOld." na ".$laTicketServiceIdNew." \n");
+    $res = $helpdesk->ticketChangeService($hlpTicket->TicketId,$laTicketServiceIdNew);
+
+}
+
 $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
 //print_r($messages);
 
@@ -44,11 +170,11 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
 
             // ignorujeme vsechny zpravy, ktere uz ticket v Helpdesku obsahuje
             if(in_array($message['id'],$messagesIndexesImported)) {
-                echo "Ignore: ".$message['id']."<BR/>\n";
+                mylog($searchTicketCode." Ignore message: ".$message['id']."\n");
                 continue;
             }
 
-            echo "Save: ".$message['id']."<BR/>\n";
+            mylog($searchTicketCode." Save message: ".$message['id']."\n");
             $messagesIndexesNew[] = $message['id'];
 
             $isMessageHtml = true;                    //bude vzdy HTML a zdrojove data pripadne z textu prevadime na HTML
@@ -100,11 +226,19 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
 
         }
 
-        //echo "New indexes: ".implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew))."<BR/>\n";
+        //zapiseme novy seznam indexu messages ktere byly naimportovany
+        mylog($searchTicketCode." Save indexes: ".implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew))."\n");
         $res = $helpdesk->updateCustomForm($hlpTicket->TicketId,$customFormId,$hlpTicket->ServiceId,array ( array ("CustomFormFieldId" => $customFormFieldId, "TextBoxValue" => implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew)))));
 
+        //zmenime sluzbu na stejnou jako ma nyni LA ticket
+        foreach ($klicovaniStavu[$laTicketStateNew][305] as $akce) {
+            $helpdesk->workflowPush($hlpTicket->TicketId,null,$akce);
+            mylog($searchTicketCode." Stav HLP ticketu zmenen z 305 prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction($akce)." \n");
+        }
+        
     }
 
+    mylog($searchTicketCode." FINISH \n");
   
 $time_end = microtime(true);
 
