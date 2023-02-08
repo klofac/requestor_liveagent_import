@@ -7,6 +7,8 @@ require "config.php";
 require "ipex_helpdesk.php";
 require "liveagent.php";
 
+date_default_timezone_set('Europe/Prague');
+
 /**
  * 
  */
@@ -187,9 +189,13 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
             //ktere statusy se maji zpracovat: D - DELETED P - PROMOTED V - VISIBLE S - SPLITTED M - MERGED I - INITIALIZING R - CONNECTING C - CALLING
             $hasAttachments = false;
             $attachmentsArray = null;
-            
+
+            //upravime cas pro zonu Europe/Prague
+            $dateLa = DateTime::createFromFormat("Y-m-d H:i:s", $message['datecreated'],new DateTimeZone('America/Phoenix'));
+            $dateLa->setTimezone(new DateTimeZone('Europe/Prague'));
+            $messageFinal = "LaTime:".date_format($dateLa, 'Y-m-d H:i:s')."<BR/>\n"; 
+ 
             //poskladame z jednotlivych casti jako jednu zpravu
-            $messageFinal = "LaTime:".$message['datecreated']."<BR/>"; 
             foreach($message['messages'] as $messagePart) {
                 if($messagePart['message'] != "" ) { 
                 
