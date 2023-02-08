@@ -44,6 +44,7 @@ $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['confi
 $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
 if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
     mylog($searchTicketCode." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")");
+    mylog($searchTicketCode." FINISH \n");
     exit;
 }
 
