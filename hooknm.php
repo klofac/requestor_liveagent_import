@@ -43,7 +43,7 @@ $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['confi
 // zjistime jake LA message uz jsou v ticketu naimportovany. Indexy naimportovanych LA messages jsou ulozeny v customFormFieldu v ticketu
 $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
 if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
-    mylog($searchTicketCode." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")");
+    mylog($searchTicketCode." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")\n");
     mylog($searchTicketCode." FINISH \n");
     exit;
 }

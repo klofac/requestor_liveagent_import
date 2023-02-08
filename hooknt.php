@@ -166,8 +166,8 @@ foreach($laTickets as $ticket) {
     if ($is_closed) {
         $res1 = $helpdesk->workflowPush($newHlpTicket->TicketId,null,301,null,null); //vezmeme z fronty
         $res2 = $helpdesk->workflowPush($newHlpTicket->TicketId,null,314,null,null); //zavreme
-        mylog($searchTicketCode." Stav HLP ticketu zmenen prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction(301)." \n");
-        mylog($searchTicketCode." Stav HLP ticketu zmenen prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction(314)." \n");
+        mylog($searchTicketCode." Stav HLP ticketu zmenen prikazem: 301-".$helpdesk->explainTicketWorkflowAction(301)." \n");
+        mylog($searchTicketCode." Stav HLP ticketu zmenen prikazem: 314-".$helpdesk->explainTicketWorkflowAction(314)." \n");
     }
     else {
         mylog($searchTicketCode." Stav HLP ticketu zustava: Ve fronte \n");
