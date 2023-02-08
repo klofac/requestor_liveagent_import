@@ -47,6 +47,9 @@ if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
     mylog($searchTicketCode." FINISH \n");
     exit;
 }
+else {
+    mylog($searchTicketCode." Nalezen ticket: ".$ticks->Tickets->Items[0]->TicketREF." \n");
+}
 
 $hlpTicket = $helpdesk->getTicket($ticks->Tickets->Items[0]->TicketREF);
 $customFormField77 = $helpdesk->getTicketCustomFormFieldById($hlpTicket->CustomForms,$customFormId,$customFormFieldId);
