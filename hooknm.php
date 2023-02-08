@@ -226,7 +226,7 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
                                 "FileName" => $fileMetadata['name'],
                                 "ContentType" => $fileMetadata['type'],
                                 "ContentLength" => $fileMetadata['size'],
-                                "Data" => $liveagent->attachmentDownload($fileMetadata['view_url'],$fileMetadata['size'])
+                                "Data" => $liveagent->attachmentDownload($fileMetadata['download_url'],$fileMetadata['size'])
                             );
                     }
                 }
