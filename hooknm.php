@@ -35,17 +35,17 @@ $time_start = microtime(true);
 
 $searchTicketCode = $_GET['ticketCode'];
 
+mylog($searchTicketCode." START \n");
+
 $helpdesk  = new \Ipex\Helpdesk\IpexHelpdesk($GLOBALS['config_hlp_url'],$GLOBALS['config_hlp_user'],$GLOBALS['config_hlp_pwd']);
 $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['config_api_key']);
 
 // zjistime jake LA message uz jsou v ticketu naimportovany. Indexy naimportovanych LA messages jsou ulozeny v customFormFieldu v ticketu
 $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
 if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
-    mylog("V Helpdesku nebyl nalezen ticket obsahujici v subjektu "."(LA:".$searchTicketCode.")");
+    mylog($searchTicketCode." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")");
     exit;
 }
-
-mylog($searchTicketCode." START \n");
 
 $hlpTicket = $helpdesk->getTicket($ticks->Tickets->Items[0]->TicketREF);
 $customFormField77 = $helpdesk->getTicketCustomFormFieldById($hlpTicket->CustomForms,$customFormId,$customFormFieldId);

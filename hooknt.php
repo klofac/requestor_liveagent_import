@@ -48,14 +48,14 @@ $messages = $liveagent->getTicketMessages($laTickets[0]['id']);
 foreach($laTickets as $ticket) {
     //vybereme na zpracovani jen emaily
     if($ticket['channel_type'] != 'E') {   
-        echo "Ignored ".$ticket['code']." (ticket type=".$ticket['channel_type'].") <BR/>\n";                             
+        mylog($searchTicketCode." Ignored ".$ticket['code']." (ticket type=".$ticket['channel_type'].")\n");                             
         continue;
     }
 
     //statusy: I - init N - new T - chatting P - calling R - resolved X - deleted B - spam A - answered C - open W - postponed
     //ignorujeme spam a deleted
     if($ticket['status'] == 'B' || $ticket['status'] == 'X') {          
-        echo "Ignored ".$ticket['code']." (ticket status=".$ticket['status'].") <BR/>\n";                             
+        mylog($searchTicketCode." Ignored ".$ticket['code']." (ticket status=".$ticket['status'].")\n");                             
         continue;
     }
 
@@ -66,8 +66,7 @@ foreach($laTickets as $ticket) {
     }
     else {
         if(!filter_var($ticket['owner_email'], FILTER_VALIDATE_EMAIL)) {
-            echo "Excluded ".$ticket['code']." (owner has invalid email address) <BR/>\n";                             
-    //todo            writeExcludedTickets("webhook_excludedTickets.csv",$ticket['id'].",".$ticket['code'],$exportExcludedFileName);
+            mylog($searchTicketCode." Excluded ".$ticket['code']." (owner has invalid email address) \n");                             
             continue;
         }                    
     }
@@ -79,8 +78,6 @@ foreach($laTickets as $ticket) {
     $isMessageHtml = false;
     $ticketType = 3;
     $attachments = null;
-    //'OperatorUserName', $GLOBALS['config_def_user']);
-    //Source, 'Email');
 
     //kontrola, ze se podarilo nejake message nacist a kdyz ne tak hodime do jine fronty 
     if(isset($messages) && $messages['message'] != 'Service Unavailable') {
