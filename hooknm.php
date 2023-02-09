@@ -39,6 +39,26 @@ $searchTicketCode = $_GET['ticketCode'];
 
 mylog($searchTicketCode." START \n");
 
+//pockame nahodne dlouhou pauzu v ramci jedne sekundy
+$delayMicroSec = rand(5,990000);
+mylog($searchTicketCode." Delay time: ".$delayMicroSec." micsec \n");
+usleep($delayMicroSec);
+
+// zjistime zda je uzamceno jinym procesem
+if(file_exists("./lock/tmp_lock_".$searchTicketCode.".lck")) {
+    mylog($searchTicketCode." Nalezen zamek z jineho procesu pro stejny ticketCode. \n");
+    mylog($searchTicketCode." FINISH \n");
+    exit;
+}
+// nastavime zamek
+if(!is_dir("./lock")) {
+     mkdir("./lock", 0777, true);
+}
+$fp = fopen("./lock/tmp_lock_".$searchTicketCode.".lck", "w");
+fwrite($fp, "LOCK");
+fclose($fp);
+mylog($searchTicketCode." Zamek nastaven \n");
+
 $helpdesk  = new \Ipex\Helpdesk\IpexHelpdesk($GLOBALS['config_hlp_url'],$GLOBALS['config_hlp_user'],$GLOBALS['config_hlp_pwd']);
 $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['config_api_key']);
 
@@ -247,6 +267,10 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
         }
         
     }
+
+    // uvolnime zamek
+    exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
+    mylog($searchTicketCode." Zamek uvolnen \n");
 
     mylog($searchTicketCode." FINISH \n");
   
