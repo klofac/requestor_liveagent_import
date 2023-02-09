@@ -68,6 +68,7 @@ if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
     mylog($searchTicketCode." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")\n");
     // uvolnime zamek
     exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
+    mylog($searchTicketCode." Zamek uvolnen \n");
     mylog($searchTicketCode." FINISH \n");
     exit;
 }
