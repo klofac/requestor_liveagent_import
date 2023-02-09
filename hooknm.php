@@ -66,6 +66,8 @@ $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['confi
 $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
 if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
     mylog($searchTicketCode." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")\n");
+    // uvolnime zamek
+    exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
     mylog($searchTicketCode." FINISH \n");
     exit;
 }
