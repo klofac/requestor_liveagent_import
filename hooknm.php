@@ -40,7 +40,7 @@ $searchTicketCode = $_GET['ticketCode'];
 mylog($searchTicketCode." START \n");
 
 //pockame nahodne dlouhou pauzu v ramci jedne sekundy
-$delayMicroSec = rand(5,990000);
+$delayMicroSec = rand(5,1000);
 mylog($searchTicketCode." Delay time: ".$delayMicroSec." micsec \n");
 usleep($delayMicroSec);
 
