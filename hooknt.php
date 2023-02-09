@@ -75,7 +75,7 @@ foreach($laTickets as $ticket) {
 
     $subject    = $ticket['subject']." (LA:".$ticket['code'].")";
     $message    = 'Importováno z '.$ticket['code'];
-    $email      = $ticket['owner_email'];
+    $email      = (!isset($ticket['owner_email']) || $ticket['owner_email'] === "" ? $GLOBALS['config_def_user'] : $ticket['owner_email'] );
     $internalGroupId = null;
     $isMessageHtml = false;
     $ticketType = 3;
