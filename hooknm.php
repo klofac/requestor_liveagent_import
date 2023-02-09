@@ -37,17 +37,19 @@ $time_start = microtime(true);
 
 $searchTicketCode = $_GET['ticketCode'];
 
-mylog($searchTicketCode." START \n");
 
 //pockame nahodne dlouhou pauzu v ramci jedne sekundy
 $delayMicroSec = rand(5,1000);
-mylog($searchTicketCode." Delay time: ".$delayMicroSec." micsec \n");
+
+mylog($searchTicketCode." ".$delayMicroSec." START \n");
+
+mylog($searchTicketCode." ".$delayMicroSec." Delay time: ".$delayMicroSec." micsec \n");
 usleep($delayMicroSec);
 
 // zjistime zda je uzamceno jinym procesem
 if(file_exists("./lock/tmp_lock_".$searchTicketCode.".lck")) {
-    mylog($searchTicketCode." Nalezen zamek z jineho procesu pro stejny ticketCode. \n");
-    mylog($searchTicketCode." FINISH \n");
+    mylog($searchTicketCode." ".$delayMicroSec." Nalezen zamek z jineho procesu pro stejny ticketCode. \n");
+    mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
     exit;
 }
 // nastavime zamek
@@ -57,7 +59,7 @@ if(!is_dir("./lock")) {
 $fp = fopen("./lock/tmp_lock_".$searchTicketCode.".lck", "w");
 fwrite($fp, "LOCK");
 fclose($fp);
-mylog($searchTicketCode." Zamek nastaven \n");
+mylog($searchTicketCode." ".$delayMicroSec." Zamek nastaven \n");
 
 $helpdesk  = new \Ipex\Helpdesk\IpexHelpdesk($GLOBALS['config_hlp_url'],$GLOBALS['config_hlp_user'],$GLOBALS['config_hlp_pwd']);
 $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['config_api_key']);
@@ -65,20 +67,20 @@ $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['confi
 // zjistime jake LA message uz jsou v ticketu naimportovany. Indexy naimportovanych LA messages jsou ulozeny v customFormFieldu v ticketu
 $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
 if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
-    mylog($searchTicketCode." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")\n");
+    mylog($searchTicketCode." ".$delayMicroSec." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")\n");
     // uvolnime zamek
     exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
-    mylog($searchTicketCode." Zamek uvolnen \n");
-    mylog($searchTicketCode." FINISH \n");
+    mylog($searchTicketCode." ".$delayMicroSec." Zamek uvolnen \n");
+    mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
     exit;
 }
 else {
-    mylog($searchTicketCode." Nalezen ticket: ".$ticks->Tickets->Items[0]->TicketREF." \n");
+    mylog($searchTicketCode." ".$delayMicroSec." Nalezen ticket: ".$ticks->Tickets->Items[0]->TicketREF." \n");
 }
 
 $hlpTicket = $helpdesk->getTicket($ticks->Tickets->Items[0]->TicketREF);
 $customFormField77 = $helpdesk->getTicketCustomFormFieldById($hlpTicket->CustomForms,$customFormId,$customFormFieldId);
-mylog($searchTicketCode." Load indexes: ".$customFormField77->TextBoxValue." \n");
+mylog($searchTicketCode." ".$delayMicroSec." Load indexes: ".$customFormField77->TextBoxValue." \n");
 $messagesIndexesImported = explode(',',$customFormField77->TextBoxValue); //seznam jiz naimportovanych messages
 $hlpTicketServiceIdOld = $hlpTicket->ServiceId; //ve ktere fronte v HLP je nyni
 $hlpTicketStateOld = $hlpTicket->TicketState; //v jakem stavu zustal ticket v HLP
@@ -163,13 +165,13 @@ $klicovaniNaStav305[305] = array();
 $klicovaniNaStav305[308] = array(312);
 $klicovaniNaStav305[312] = array(319);
 
-mylog($searchTicketCode." Stav HLP ticketu: ".$hlpTicketStateOld."-".$helpdesk->explainTicketState($hlpTicketStateOld)." \n");
-mylog($searchTicketCode." Stav LA ticketu: ".$laTicketStateNew."-".$liveagent->explainTicketStatus($laTicketStateNew)." \n");
+mylog($searchTicketCode." ".$delayMicroSec." Stav HLP ticketu: ".$hlpTicketStateOld."-".$helpdesk->explainTicketState($hlpTicketStateOld)." \n");
+mylog($searchTicketCode." ".$delayMicroSec." Stav LA ticketu: ".$laTicketStateNew."-".$liveagent->explainTicketStatus($laTicketStateNew)." \n");
 
 //uvedeme HLP ticket do stavu, kdy je mozne zmenit sluzbu, prepneme ticket do stavu 305
 foreach ($klicovaniNaStav305[$hlpTicketStateOld] as $akce) {
     $helpdesk->workflowPush($hlpTicket->TicketId,null,$akce);
-    mylog($searchTicketCode." Stav HLP ticketu zmenen na 305 prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction($akce)." \n");
+    mylog($searchTicketCode." ".$delayMicroSec." Stav HLP ticketu zmenen na 305 prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction($akce)." \n");
 }
 
 //nyni muzeme delat upravy ticketu
@@ -181,7 +183,7 @@ $laTicketServiceIdNew=$hlpTicketServiceIdOld;
 
 // pokud doslo k presunu ticketu do jine fronty
 if($hlpTicketServiceIdOld !== $laTicketServiceIdNew) {
-    mylog($searchTicketCode." V LA ticketu je jine nastaveni departmentu nez je sluzba v Helpdesku, bude provedena zmena sluzby z ".$hlpTicketServiceIdOld." na ".$laTicketServiceIdNew." \n");
+    mylog($searchTicketCode." ".$delayMicroSec." V LA ticketu je jine nastaveni departmentu nez je sluzba v Helpdesku, bude provedena zmena sluzby z ".$hlpTicketServiceIdOld." na ".$laTicketServiceIdNew." \n");
     $res = $helpdesk->ticketChangeService($hlpTicket->TicketId,$laTicketServiceIdNew);
 
 }
@@ -199,11 +201,11 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
 
             // ignorujeme vsechny zpravy, ktere uz ticket v Helpdesku obsahuje
             if(in_array($message['id'],$messagesIndexesImported)) {
-                mylog($searchTicketCode." Ignore message: ".$message['id']."\n");
+                mylog($searchTicketCode." ".$delayMicroSec." Ignore message: ".$message['id']."\n");
                 continue;
             }
 
-            mylog($searchTicketCode." Save message: ".$message['id']."\n");
+            mylog($searchTicketCode." ".$delayMicroSec." Save message: ".$message['id']."\n");
             $messagesIndexesNew[] = $message['id'];
 
             $isMessageHtml = true;                    //bude vzdy HTML a zdrojove data pripadne z textu prevadime na HTML
@@ -260,22 +262,22 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
         }
 
         //zapiseme novy seznam indexu messages ktere byly naimportovany
-        mylog($searchTicketCode." Save indexes: ".implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew))."\n");
+        mylog($searchTicketCode." ".$delayMicroSec." Save indexes: ".implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew))."\n");
         $res = $helpdesk->updateCustomForm($hlpTicket->TicketId,$customFormId,$hlpTicket->ServiceId,array ( array ("CustomFormFieldId" => $customFormFieldId, "TextBoxValue" => implode(',',array_merge($messagesIndexesImported,$messagesIndexesNew)))));
 
         //zmenime sluzbu na stejnou jako ma nyni LA ticket
         foreach ($klicovaniStavu[$laTicketStateNew][305] as $akce) {
             $helpdesk->workflowPush($hlpTicket->TicketId,null,$akce);
-            mylog($searchTicketCode." Stav HLP ticketu zmenen z 305 prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction($akce)." \n");
+            mylog($searchTicketCode." ".$delayMicroSec." Stav HLP ticketu zmenen z 305 prikazem: ".$akce."-".$helpdesk->explainTicketWorkflowAction($akce)." \n");
         }
         
     }
 
     // uvolnime zamek
     exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
-    mylog($searchTicketCode." Zamek uvolnen \n");
+    mylog($searchTicketCode." ".$delayMicroSec." Zamek uvolnen \n");
 
-    mylog($searchTicketCode." FINISH \n");
+    mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
   
 $time_end = microtime(true);
 
