@@ -176,11 +176,6 @@ foreach ($klicovaniNaStav305[$hlpTicketStateOld] as $akce) {
 
 //nyni muzeme delat upravy ticketu
 
-// -------------------------------------
-//TODO Odstranit po spusteni do produkce, jen pro testy na ipex-test
-$laTicketServiceIdNew=$hlpTicketServiceIdOld;
-// -------------------------------------
-
 // pokud doslo k presunu ticketu do jine fronty
 if($hlpTicketServiceIdOld !== $laTicketServiceIdNew) {
     mylog($searchTicketCode." ".$delayMicroSec." V LA ticketu je jine nastaveni departmentu nez je sluzba v Helpdesku, bude provedena zmena sluzby z ".$hlpTicketServiceIdOld." na ".$laTicketServiceIdNew." \n");

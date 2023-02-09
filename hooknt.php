@@ -89,11 +89,6 @@ foreach($laTickets as $ticket) {
         $serviceId = $problemsQueueId; //'Kontrola importu z LA'
     }
 
-    // -------------------------------------
-    //TODO Odstranit po spusteni do produkce, jen pro testy na ipex-test
-    $serviceId = 45;//jen pro ipex-test, na produkci zrusit
-    // -------------------------------------
-    
     // vyvtorime ticket v Helpdesku
     $newHlpTicket = $helpdesk->newAnonymousTicket($email,$ticketType,$serviceId,$subject,$message,$isMessageHtml);
     //print_r($newHlpTicket);    
