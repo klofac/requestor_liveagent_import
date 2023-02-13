@@ -89,6 +89,9 @@ foreach($laTickets as $ticket) {
         $serviceId = $problemsQueueId; //'Kontrola importu z LA'
     }
 
+    if($ipexTest) {
+        $serviceId = 45;
+    }
     // vyvtorime ticket v Helpdesku
     $newHlpTicket = $helpdesk->newAnonymousTicket($email,$ticketType,$serviceId,$subject,$message,$isMessageHtml);
     //print_r($newHlpTicket);    
@@ -149,6 +152,8 @@ foreach($laTickets as $ticket) {
                                 "ContentLength" => $fileMetadata['size'],
                                 "Data" => $liveagent->attachmentDownload($fileMetadata['download_url'],$fileMetadata['size'])
                             );
+
+                        mylog($searchTicketCode." Attachment: ".$fileMetadata['name'].", originalSize: ".$fileMetadata['size']."\n"); //", data sample: ".substr($fileData,0,15)."... \n");
                     }
                 }
             } 
