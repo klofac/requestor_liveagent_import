@@ -34,6 +34,7 @@ if(!isset($_GET['ticketCode'])) {
 //mereni doby behu programu
 $time_start = microtime(true);
 
+try {
 
 $searchTicketCode = $_GET['ticketCode'];
 
@@ -42,6 +43,10 @@ $searchTicketCode = $_GET['ticketCode'];
 $delayMicroSec = rand(5,1000);
 
 mylog($searchTicketCode." ".$delayMicroSec." START \n");
+
+//musime pockat 2sec na dokonceni zalozeni ticketu, pokud prisel webhook na update drive nez webhook na create
+sleep(2);
+mylog($searchTicketCode." Delay time: 2sec - waiting for create finishing\n");
 
 mylog($searchTicketCode." ".$delayMicroSec." Delay time: ".$delayMicroSec." micsec \n");
 usleep($delayMicroSec);
@@ -273,6 +278,9 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
     mylog($searchTicketCode." ".$delayMicroSec." Zamek uvolnen \n");
 
     mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
+} catch(Exception $e) {
+    mylog($searchTicketCode." ".$delayMicroSec." Error: ".$e->getMessage()." \n");
+}
   
 $time_end = microtime(true);
 
