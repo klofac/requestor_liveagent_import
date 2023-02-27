@@ -76,15 +76,15 @@ if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
     sleep(3);
     $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
     if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
-        mylog($searchTicketCode." ".$delayMicroSec." Nalezen ticket: ".$ticks->Tickets->Items[0]->TicketREF." (opakovany pokus)\n");
-    }
-    else {
         mylog($searchTicketCode." ".$delayMicroSec." V Helpdesku nebyl ani na druhy pokus nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")\n");
         // uvolnime zamek
         exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
         mylog($searchTicketCode." ".$delayMicroSec." Zamek uvolnen \n");
         mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
         exit;
+    }
+    else {
+        mylog($searchTicketCode." ".$delayMicroSec." Nalezen ticket: ".$ticks->Tickets->Items[0]->TicketREF." (opakovany pokus)\n");
     }
 }
 else {
