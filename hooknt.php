@@ -45,6 +45,11 @@ $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['confi
 
 $laTickets = $liveagent->getTicket($searchTicketCode);
 //print_r($laTickets);
+if(!isset($laTickets[0]['id'])) {
+    mylog($searchTicketCode." Error: nepodarilo se nacist ticket z LA\n");                             
+    mylog($searchTicketCode." FINISH \n");
+    exit;
+}
 $messages = $liveagent->getTicketMessages($laTickets[0]['id']);
 //print_r($messages);
 
