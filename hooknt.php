@@ -21,6 +21,8 @@ function mylog($text) {
     echo $time.nl2br($text);
 }
 
+try {
+
 //Indexy naimportovanych LA messages jsou ulozeny v 
 $customFormFieldId = $GLOBALS['config_hlp_custom_form_field_id'];
 $customFormId = $GLOBALS['config_hlp_custom_form_id'];
@@ -94,8 +96,14 @@ foreach($laTickets as $ticket) {
     }
     // vyvtorime ticket v Helpdesku
     $newHlpTicket = $helpdesk->newAnonymousTicket($email,$ticketType,$serviceId,$subject,$message,$isMessageHtml);
-    //print_r($newHlpTicket);    
-    mylog($searchTicketCode." Vytvoren ticket: ".$newHlpTicket->TicketREF." ve sluzbe: ".$serviceId." \n");
+    //print_r($newHlpTicket);
+    if(isset($newHlpTicket->Message)) {
+        mylog($searchTicketCode." Chyba pri vytvoreni ticketu: ".$newHlpTicket->Message." \n");
+        continue;
+    } 
+    else {   
+        mylog($searchTicketCode." Vytvoren ticket: ".$newHlpTicket->TicketREF." ve sluzbe: ".$serviceId." \n");
+    }
 
     if(isset($messages) && $messages['message'] != 'Service Unavailable') {
 
@@ -183,5 +191,8 @@ foreach($laTickets as $ticket) {
 mylog($searchTicketCode." FINISH \n");
 
 $time_end = microtime(true);
+} catch (Exception $e) {
+    mylog($searchTicketCode." Error: ".$e->getMessage()." \n");
+}
 
 echo "Finished in ".round($time_end - $time_start)." sec";
