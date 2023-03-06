@@ -97,9 +97,7 @@ function convertDepartmentToService($departmentId) {
  * MAIN PROGRAM
  * 
  */
-
-    $ticket_from    = (isset($_GET['from']) ? $_GET['from'] : '0' );
-    $ticket_to      = (isset($_GET['to']) ? $_GET['to'] : '1' );
+    $time_start = microtime(true);
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $mysqli = new mysqli($GLOBALS['config_tmpDB_hostname'], $GLOBALS['config_tmpDB_user'], $GLOBALS['config_tmpDB_pwd'], $GLOBALS['config_tmpDB_db'],3306);
@@ -110,9 +108,10 @@ function convertDepartmentToService($departmentId) {
     $tRes = $tMax->fetch_object();
     $tIDmax = (isset($tRes->ticketIDmax) ? $tRes->ticketIDmax : 0);
 
-    $time_start = microtime(true);
+    $ticket_from    = (isset($_GET['from']) ? $_GET['from'] : ($tIDmax+1) );
+    $ticket_to      = (isset($_GET['to']) ? $_GET['to'] : ($tIDmax+$GLOBALS['config_la_nacist_ticketu']+1) );
 
-    $command = "tickets?_from=".($tIDmax+1)."&_to=".($tIDmax+$GLOBALS['config_la_nacist_ticketu']+1)."&_sortField=date_created"; //&_sortField=date_changed&_sortDir=DESC
+    $command = "tickets?_from=".$ticket_from."&_to=".$ticket_to."&_sortField=date_created"; //&_sortField=date_changed&_sortDir=DESC
     echo $command."<BR/>\n";
 
     // nacteme tickety
@@ -126,7 +125,7 @@ function convertDepartmentToService($departmentId) {
             .",".convertDepartmentToService((isset($ticket['departmentid']) ? $ticket['departmentid'] : ''))
             .",".$ticket['date_created']
             .",".$ticket['date_changed']
-            .",".($tIDmax+1+$key)
+            .",".($ticket_from+$key)
             .",status=".$ticket['status']
             ."<BR/>\n";
         if(isset($ticket['id'])) {
