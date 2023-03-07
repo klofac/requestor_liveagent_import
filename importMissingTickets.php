@@ -37,11 +37,13 @@ function call_hooknt(string $ticketCode) : string {
  */
     $time_start = microtime(true);
 
+    $importLimit = (isset($_GET['limit']) ? ($_GET['limit']+0) : 10) ;
+
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $mysqli = new mysqli($GLOBALS['config_tmpDB_hostname'], $GLOBALS['config_tmpDB_user'], $GLOBALS['config_tmpDB_pwd'], $GLOBALS['config_tmpDB_db'],3306);
     $mysqli->set_charset('utf8');
 
-    $command = "SELECT laTicketID FROM ".$GLOBALS['config_tmpDB_missingTickets']." WHERE zapsanoDoHLP IS NULL ORDER BY laTicketChanged DESC LIMIT 1";
+    $command = "SELECT laTicketID FROM ".$GLOBALS['config_tmpDB_missingTickets']." WHERE zapsanoDoHLP IS NULL ORDER BY laTicketChanged DESC LIMIT ".$importLimit;
     //echo $command."<BR/>";
 
     $tickets = $mysqli->query($command);
