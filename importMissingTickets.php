@@ -53,14 +53,18 @@ function call_hooknt(string $ticketCode) : string {
 
         echo $hookntResult."<BR/>\n";
 
-        if(true) {
-            $commandUpdate = "UPDATE ".$GLOBALS['config_tmpDB_missingTickets']." SET zapsanoDoHLP=NOW() WHERE laTicketID='".$ticketCode."' LIMIT 1";
-            //echo $commandUpdate."<BR/>\n";
-            $mysqli->query($commandUpdate);
+        if(stripos($hookntResult,'Error: nepodarilo se nacist ticket z LA') || stripos($hookntResult,'Error: vytvoreni ticketu selhalo')) {
+            //do datumu dame nuly, ale neni to null, tak pozname co neproslo
+            $commandUpdate = "UPDATE ".$GLOBALS['config_tmpDB_missingTickets']." SET zapsanoDoHLP='' WHERE laTicketID='".$ticketCode."' LIMIT 1";
         }
+        else {
+            $commandUpdate = "UPDATE ".$GLOBALS['config_tmpDB_missingTickets']." SET zapsanoDoHLP=NOW() WHERE laTicketID='".$ticketCode."' LIMIT 1";
+        }
+        //echo $commandUpdate."<BR/>\n";
+        $mysqli->query($commandUpdate);
         sleep(2);
     }
     $time_end = microtime(true);
 
-    echo "Finished in ".round($time_end - $time_start)." sec";
+    echo "Finished in ".round($time_end - $time_start)." sec - total";
 ?>

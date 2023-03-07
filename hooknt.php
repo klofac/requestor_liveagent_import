@@ -103,7 +103,7 @@ foreach($laTickets as $ticket) {
     $newHlpTicket = $helpdesk->newAnonymousTicket($email,$ticketType,$serviceId,$subject,$message,$isMessageHtml);
     //print_r($newHlpTicket);
     if(isset($newHlpTicket->Message)) {
-        mylog($searchTicketCode." Chyba pri vytvoreni ticketu: ".$newHlpTicket->Message." \n");
+        mylog($searchTicketCode." Error: vytvoreni ticketu selhalo: ".$newHlpTicket->Message." \n");
         continue;
     } 
     else {   
