@@ -75,8 +75,8 @@ foreach($laTickets as $ticket) {
     }
     else {
         if(!filter_var($ticket['owner_email'], FILTER_VALIDATE_EMAIL)) {
-            mylog($searchTicketCode." Excluded ".$ticket['code']." (owner has invalid email address ".$ticket['owner_email'].") \n");                             
-            continue;
+            mylog($searchTicketCode." Repaired ".$ticket['code']." (owner has invalid email address ".$ticket['owner_email']." -> ".$GLOBALS['config_def_user'].") \n");                             
+            $ticket['owner_email'] = $GLOBALS['config_def_user'];
         }                    
     }
 
