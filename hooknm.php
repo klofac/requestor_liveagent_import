@@ -37,34 +37,36 @@ $time_start = microtime(true);
 try {
 
 $searchTicketCode = $_GET['ticketCode'];
-
+$fastMode = (isset($_GET['fastMode']) ? true : false); //fastMode neni urcen pro obsluhu webhooku ale pro hromadny update
 
 //pockame nahodne dlouhou pauzu v ramci jedne sekundy
 $delayMicroSec = rand(5,1000);
 
 mylog($searchTicketCode." ".$delayMicroSec." START \n");
 
-//musime pockat 2sec na dokonceni zalozeni ticketu, pokud prisel webhook na update drive nez webhook na create
-sleep(2);
-mylog($searchTicketCode." Delay time: 2sec - waiting for create finishing\n");
+if(!$fastMode) {
+    //musime pockat 2sec na dokonceni zalozeni ticketu, pokud prisel webhook na update drive nez webhook na create
+    mylog($searchTicketCode." ".$delayMicroSec." Delay time: 2sec - waiting for create finishing\n");
+    sleep(2);
 
-mylog($searchTicketCode." ".$delayMicroSec." Delay time: ".$delayMicroSec." micsec \n");
-usleep($delayMicroSec);
+    mylog($searchTicketCode." ".$delayMicroSec." Delay time: ".$delayMicroSec." micsec \n");
+    usleep($delayMicroSec);
 
-// zjistime zda je uzamceno jinym procesem
-if(file_exists("./lock/tmp_lock_".$searchTicketCode.".lck")) {
-    mylog($searchTicketCode." ".$delayMicroSec." Nalezen zamek z jineho procesu pro stejny ticketCode. \n");
-    mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
-    exit;
+    // zjistime zda je uzamceno jinym procesem
+    if(file_exists("./lock/tmp_lock_".$searchTicketCode.".lck")) {
+        mylog($searchTicketCode." ".$delayMicroSec." Nalezen zamek z jineho procesu pro stejny ticketCode. \n");
+        mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
+        exit;
+    }
+    // nastavime zamek
+    if(!is_dir("./lock")) {
+        mkdir("./lock", 0777, true);
+    }
+    $fp = fopen("./lock/tmp_lock_".$searchTicketCode.".lck", "w");
+    fwrite($fp, "LOCK");
+    fclose($fp);
+    mylog($searchTicketCode." ".$delayMicroSec." Zamek nastaven \n");
 }
-// nastavime zamek
-if(!is_dir("./lock")) {
-     mkdir("./lock", 0777, true);
-}
-$fp = fopen("./lock/tmp_lock_".$searchTicketCode.".lck", "w");
-fwrite($fp, "LOCK");
-fclose($fp);
-mylog($searchTicketCode." ".$delayMicroSec." Zamek nastaven \n");
 
 $helpdesk  = new \Ipex\Helpdesk\IpexHelpdesk($GLOBALS['config_hlp_url'],$GLOBALS['config_hlp_user'],$GLOBALS['config_hlp_pwd']);
 $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['config_api_key']);
@@ -72,20 +74,27 @@ $liveagent = new \Liveagent\Liveagent($GLOBALS['config_api_url'],$GLOBALS['confi
 // zjistime jake LA message uz jsou v ticketu naimportovany. Indexy naimportovanych LA messages jsou ulozeny v customFormFieldu v ticketu
 $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
 if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
-    mylog($searchTicketCode." ".$delayMicroSec." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode."), ale zkusime to jeste jednou za 3 sec.\n");
-    sleep(3);
-    $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
-    if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
-        mylog($searchTicketCode." ".$delayMicroSec." V Helpdesku nebyl ani na druhy pokus nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")\n");
-        // uvolnime zamek
-        exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
-        mylog($searchTicketCode." ".$delayMicroSec." Zamek uvolnen \n");
-        mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
-        exit;
+    if(!$fastMode) {
+        mylog($searchTicketCode." ".$delayMicroSec." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode."), ale zkusime to jeste jednou za 3 sec.\n");
+        sleep(3);
+        $ticks=$helpdesk->searchTickets(0,10,"(LA:".$searchTicketCode.")");
+        if(!isset($ticks->Tickets->Items[0]->TicketREF)) {
+            mylog($searchTicketCode." ".$delayMicroSec." V Helpdesku nebyl ani na druhy pokus nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.")\n");
+            // uvolnime zamek
+            exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
+            mylog($searchTicketCode." ".$delayMicroSec." Zamek uvolnen \n");
+            mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
+            exit;
+        }
+        else {
+            mylog($searchTicketCode." ".$delayMicroSec." Nalezen ticket: ".$ticks->Tickets->Items[0]->TicketREF." (opakovany pokus)\n");
+        }
     }
     else {
-        mylog($searchTicketCode." ".$delayMicroSec." Nalezen ticket: ".$ticks->Tickets->Items[0]->TicketREF." (opakovany pokus)\n");
-    }
+        mylog($searchTicketCode." ".$delayMicroSec." V Helpdesku nebyl nalezen ticket obsahujici v subjektu (LA:".$searchTicketCode.").\n");
+        mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
+        exit;
+}
 }
 else {
     mylog($searchTicketCode." ".$delayMicroSec." Nalezen ticket: ".$ticks->Tickets->Items[0]->TicketREF." \n");
@@ -281,10 +290,12 @@ $laMessages = $liveagent->getTicketMessages($laTickets[0]['id']);
         
     }
 
-    // uvolnime zamek
-    exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
-    mylog($searchTicketCode." ".$delayMicroSec." Zamek uvolnen \n");
-
+    if(!$fastMode) {
+        // uvolnime zamek
+        exec("rm -f "."./lock/tmp_lock_".$searchTicketCode.".lck");
+        mylog($searchTicketCode." ".$delayMicroSec." Zamek uvolnen \n");
+    }
+    
     mylog($searchTicketCode." ".$delayMicroSec." FINISH \n");
 } catch(Exception $e) {
     mylog($searchTicketCode." ".$delayMicroSec." Error: ".$e->getMessage()." \n");

@@ -155,6 +155,19 @@ class IpexHelpdesk {
     }
 
     /**
+     * addTicketTag
+     * @param int $ticketId
+     * @param int $tagId
+     */
+    public function addTicketTag(int $ticketId = 0, int $tagId = 0) {
+        $body["TicketId"]      = $ticketId;
+        $body["TagId"]         = $tagId;
+
+        //print_r(json_encode($body));
+        return $this->apiCall("POST","Tickets/addTag",json_encode($body));
+    }
+
+    /**
      * getTicketCustomFormFieldById
      * @param array $ticketCustomFormFieldArray     Custom Form Field Array from getTicket result (e.g. $hlpTicket->CustomForms[0]->CustomFormFieldsData)
      * @param int   $customFormId                   ID of Custom Form
